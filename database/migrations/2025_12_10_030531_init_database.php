@@ -229,6 +229,20 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        /**
+         * Bảng banners
+         * note: bảng banner
+         */
+        Schema::create('banners', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->comment('Tên banner')->index();
+            $table->string('image')->nullable()->comment('Hình ảnh banner');
+            $table->boolean('is_active')->default(false)->comment('0/1 – active status');
+            $table->tinyInteger('position')->default(0)->comment('Vị trí banner');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
         // default schema
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -321,6 +335,7 @@ return new class extends Migration
 
         // Bảng có khóa ngoại tham chiếu đến users, cameras, products, departments, showrooms, brands, lines
         Schema::dropIfExists('news'); // Tham chiếu đến users
+        Schema::dropIfExists('banners'); 
         Schema::dropIfExists('camera_user'); // Tham chiếu đến users và cameras
         Schema::dropIfExists('products'); // Tham chiếu đến brands và lines (product_images đã được merge vào products)
         Schema::dropIfExists('cameras'); // Tham chiếu đến showrooms

@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole;
+use App\Enums\ConfigType;
+use App\Models\Config;
 use App\Models\User;
 use App\Models\Province;
 use App\Models\District;
@@ -21,21 +23,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        if (!User::where('email', 'test@example.com')->exists()) {
-            User::factory()->create([
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-            ]);
-        }
-
         // Run additional seed routines (skip in production)
-        if (!app()->environment('production')) {
-            $this->seedProvince();
-            $this->seedAdmin();
-        }
+        // $this->seedProvince();
+        // $this->seedAdmin();
+        $this->seedConfig();
     }
 
-        private function seedProvince()
+    private function seedProvince()
     {
         DB::beginTransaction();
         try {
@@ -121,12 +115,47 @@ class DatabaseSeeder extends Seeder
             );
             DB::commit();
             return true;
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             dump($exception);
             return false;
         }
     }
 
-    
+    private function seedConfig()
+    {
+        DB::beginTransaction();
+        try {
+            $configs = [
+                [
+                    'config_key' => 'APP_ID',
+                    'config_value' => '12345678',
+                    'config_type' => ConfigType::KEY->value,
+                    'description' => 'Client ID App',
+                ],
+                [
+                    'config_key' => 'APP_SECRET',
+                    'config_value' => '12345678',
+                    'config_type' => ConfigType::KEY->value,
+                    'description' => 'App Secret',
+                ],
+            ];
+            foreach ($configs as $config) {
+                Config::query()->updateOrCreate(
+                    ['config_key' => $config['config_key']],
+                    [
+                        'config_value' => $config['config_value'],
+                        'config_type' => $config['config_type'],
+                        'description' => $config['description'],
+                    ]
+                );
+            }
+            DB::commit();
+            return true;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            dump($th);
+            return false;
+        }
+    }
 }

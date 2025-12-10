@@ -138,11 +138,9 @@
     -   `is_active` (boolean, default true) — index
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
--   **Lưu ý**: Bảng `product_images` đã bị xóa; ảnh lưu trữ dưới dạng JSON trong cột `images`.
 
 ### `product_images`
 
--   **[REMOVED]** — Bảng này đã bị xóa. Ảnh sản phẩm giờ lưu trữ dưới dạng JSON trong cột `images` của bảng `products`.
 
 ### `departments`
     
@@ -197,3 +195,16 @@
     -   `is_active` (boolean, default true) — index
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
+
+
+### `banners`
+
+-   Mô tả: Banner.
+-   Cấu trúc:
+    -   `id`
+    -   `name` (string) — index
+    -   `image` (string, nullable)
+    -   `is_active` (boolean, default true) — index
+    -   `position` (unsignedTinyInteger, default 0)
+    -   `deleted_at` (soft deletes)
+    -   `updated_at`, `created_at`
