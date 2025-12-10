@@ -13,7 +13,7 @@ return new class extends Migration
     {
         // ... (Nội dung của public function up() giữ nguyên như code bạn cung cấp)
         // custom schema
-        
+
         /**
          * Bảng provinces
          * note: bảng tỉnh thành
@@ -76,13 +76,13 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Tên cửa hàng')->index();
             $table->string('address')->comment('Địa chỉ cửa hàng');
-            $table->string('phone')->nullable()->comment('Số điện thoại cửa hàng')->index(); 
-            $table->string('email')->nullable()->comment('Email cửa hàng')->index(); 
+            $table->string('phone')->nullable()->comment('Số điện thoại cửa hàng')->index();
+            $table->string('email')->nullable()->comment('Email cửa hàng')->index();
             $table->string('logo')->nullable()->comment('Logo cửa hàng');
             $table->string('description')->nullable()->comment('Mô tả cửa hàng');
-            $table->string('province_code')->nullable()->comment('Mã tỉnh')->index(); 
+            $table->string('province_code')->nullable()->comment('Mã tỉnh')->index();
             $table->string('district_code')->nullable()->index();
-            $table->string('ward_code')->nullable()->index(); 
+            $table->string('ward_code')->nullable()->index();
             $table->string('weblink')->nullable();
             $table->decimal('latitude', 10, 8)->default(0);
             $table->decimal('longitude', 11, 8)->default(0);
@@ -100,7 +100,7 @@ return new class extends Migration
          */
         Schema::create('cameras', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->comment('Tên camera')->index(); 
+            $table->string('name')->comment('Tên camera')->index();
             $table->string('ip_address')->comment('Địa chỉ IP camera');
             $table->string('image')->comment('Ảnh camera');
             $table->string('port')->comment('Port camera');
@@ -147,8 +147,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->index(); // Index: Tìm kiếm theo tên
             $table->string('description')->nullable();
-            $table->foreignId('brand_id')->nullable()->constrained('brands', 'id','fk_products_brand_id')->nullOnDelete();
-            $table->foreignId('line_id')->nullable()->constrained('lines', 'id','fk_products_line_id')->nullOnDelete();
+            $table->foreignId('brand_id')->nullable()->constrained('brands', 'id', 'fk_products_brand_id')->nullOnDelete();
+            $table->foreignId('line_id')->nullable()->constrained('lines', 'id', 'fk_products_line_id')->nullOnDelete();
             $table->json('colors')->nullable()->comment('Màu sắc sản phẩm, cấu trúc: [ { "name": "Màu sắc", "code": "Màu sắc" } ]');
             $table->json('specifications')->nullable()->comment('Thông số sản phẩm, cấu trúc: [ { "name": "Thông số", "value": "Giá trị" } ]');
             $table->json('features')->nullable()->comment('Tính năng sản phẩm, cấu trúc: [ { "title": "Tính năng", "description": "Giá trị" } ]');
@@ -190,12 +190,12 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Tên người dùng')->index();
             $table->string('email')->unique()->nullable();
-            $table->string('phone')->unique()->nullable();
+            $table->string('phone')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
             $table->string('avatar')->nullable();
             $table->string('referral_code', 40)->nullable()->index();
-            $table->unsignedTinyInteger('role')->default(0)->comment('Vai trò người dùng trong enum UserRole')->index(); // Index: Lọc theo vai trò
+            $table->unsignedTinyInteger('role')->default(0)->comment('Vai trò người dùng trong enum UserRole')->index();
             $table->timestamp('joined_at')->default(now())->comment('Thời gian tham vào công ty ~ thời gian bắt đầu sử dụng hệ thống');
             $table->boolean('is_active')->default(true)->comment('Trạng thái người dùng ~ lock / unlock - tính năng khóa tài khoản')->index(); // Index: Lọc theo trạng thái
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban')->index();
@@ -333,7 +333,7 @@ return new class extends Migration
         Schema::dropIfExists('cameras'); // Tham chiếu đến showrooms
         Schema::dropIfExists('users'); // Tham chiếu đến departments
         Schema::dropIfExists('showrooms'); // Tham chiếu đến provinces, districts, wards
-        
+
         // Bảng danh mục đơn giản/bảng cha
         Schema::dropIfExists('departments');
         Schema::dropIfExists('lines');
