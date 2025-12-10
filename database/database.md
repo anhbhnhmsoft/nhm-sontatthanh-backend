@@ -161,7 +161,7 @@
     -   `id`
     -   `name` (string) — index
     -   `email` (string, unique, nullable)
-    -   `phone` (string, unique, nullable)
+    -   `phone` (string, unique)
     -   `email_verified_at` (timestamp, nullable)
     -   `phone_verified_at` (timestamp, nullable)
     -   `avatar` (string, nullable)
