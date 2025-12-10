@@ -102,6 +102,7 @@ return new class extends Migration
             $table->string('name')->comment('Tên camera')->index();
             $table->string('device_id')->nullable()->comment('SN – bắt buộc')->unique();
             $table->unsignedTinyInteger('channel_id')->default(0)->nullable()->comment('Thường = 0');
+            $table->string('image')->nullable()->comment('Hình ảnh mặc định camera');
             $table->string('device_model')->nullable()->comment('Model camera');
             $table->boolean('bind_status')->default(false)->comment('0/1 – bind hay chưa');
             $table->boolean('is_active')->default(false)->comment('0/1 – active hay chưa');

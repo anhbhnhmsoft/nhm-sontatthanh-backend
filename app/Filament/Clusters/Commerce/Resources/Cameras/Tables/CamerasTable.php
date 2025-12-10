@@ -12,6 +12,7 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -30,6 +31,9 @@ class CamerasTable
                 TextColumn::make('name')
                     ->label('Tên camera')
                     ->searchable(),
+                ImageColumn::make('image')
+                    ->label('Hình ảnh')
+                    ->disk('public'),
                 TextColumn::make('users')
                     ->label('Người dùng')
                     ->getStateUsing(function ($record) {

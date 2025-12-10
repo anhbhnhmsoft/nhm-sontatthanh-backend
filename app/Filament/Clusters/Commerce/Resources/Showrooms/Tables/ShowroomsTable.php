@@ -11,6 +11,7 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -27,6 +28,9 @@ class ShowroomsTable
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
+                ImageColumn::make('logo')
+                    ->label('Hình ảnh')
+                    ->disk('public'),
                 TextColumn::make('hotlines')
                     ->label('Số điện thoại Hotlines')
                     ->getStateUsing(function ($record) {

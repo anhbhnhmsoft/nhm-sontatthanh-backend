@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Commerce\Resources\Cameras\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
@@ -62,6 +63,16 @@ class CameraForm
                                         'required' => 'Model không được để trống',
                                         'maxLength' => 'Model không được vượt quá 255 ký tự',
                                     ]),
+                                FileUpload::make('image')
+                                    ->disk('public')
+                                    ->directory('camera')
+                                    ->image()
+                                    ->required()
+                                    ->validationMessages([
+                                        'required' => 'Hinh anh khong duoc de trong'
+                                    ])
+                                    ->columnSpan('full')
+                                    ->label('Hình ảnh')
                             ])
                     ])
                     ->columnSpan('full'),

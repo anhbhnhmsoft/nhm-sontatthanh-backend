@@ -13,6 +13,7 @@ class Camera extends Model
     protected $fillable = [
         'name',
         'description',
+        'image',
         'showroom_id',
         'is_active',
         'device_id',
