@@ -2,16 +2,16 @@
 
 # Tổng quan
 
--- Các bảng mặc định Laravel (đã tạo trong migration):
+## Các bảng mặc định Laravel
 
--   `sessions`
--   `cache`
--   `cache_locks`
--   `jobs`
--   `job_batches`
--   `failed_jobs`
--   `notifications`
--   `password_reset_tokens`
+- `sessions`
+- `cache`
+- `cache_locks`
+- `jobs`
+- `job_batches`
+- `failed_jobs`
+- `notifications`
+- `password_reset_tokens`
 
 ## Bảng chi tiết
 
@@ -61,42 +61,39 @@
 
 ### `showrooms`
 
--   Mô tả: Cửa hàng trưng bày.
--   Cấu trúc:
-    -   `id`
-    -   `name` (string) — index
-    -   `address` (string)
-    -   `phone` (string, nullable) — index
-    -   `email` (string, nullable) — index
-    -   `logo` (string, nullable)
-    -   `description` (string, nullable)
-    -   `province_code` (foreignId, nullable) — tham chiếu `provinces.code`, `nullOnDelete()`, index
-    -   `district_code` (foreignId, nullable) — tham chiếu `districts.code`, `nullOnDelete()`, index
-    -   `ward_code` (foreignId, nullable) — tham chiếu `wards.code`, `nullOnDelete()`, index
-    -   `weblink` (string, nullable)
-    -   `latitude` (decimal(10,8), default 0)
-    -   `longitude` (decimal(11,8), default 0)
-    -   `hotlines` (json, nullable) — ví dụ: [{"label":"Tên hotline","phone":"Số điện thoại"}]
-    -   `deleted_at` (soft deletes)
-    -   `created_at`, `updated_at`
-
+- Mô tả: Cửa hàng trưng bày.
+- Cấu trúc:
+  - `id`
+  - `name` (string) — index
+  - `address` (string)
+  - `email` (string, nullable) — index
+  - `logo` (string, nullable)
+  - `description` (string, nullable)
+  - `province_code` (string, nullable, FK) → `provinces.code`, nullOnDelete, index
+  - `district_code` (string, nullable, FK) → `districts.code`, nullOnDelete, index
+  - `ward_code` (string, nullable, FK) → `wards.code`, nullOnDelete, index
+  - `weblink` (string, nullable)
+  - `latitude` (decimal(10,8), default 0)
+  - `longitude` (decimal(11,8), default 0)
+  - `hotlines` (json, nullable) — ví dụ: [{"label":"Hotline 1","phone":"0123456789"}]
+  - `deleted_at` (soft deletes)
+  - `created_at`, `updated_at`
 ### `cameras`
 
--   Mô tả: Camera gắn với showroom.
--   Cấu trúc:
-    -   `id`
-    -   `name` (string) — index
-    -   `ip_address` (string)
-    -   `image` (string)
-    -   `port` (string)
-    -   `app_id` (string)
-    -   `api_key` (string)
-    -   `api_token` (string)
-    -   `description` (string, nullable)
-    -   `showroom_id` (foreignId, nullable) — tham chiếu `showrooms.id`, `nullOnDelete()`, index
-    -   `is_active` (boolean, default true) — index
-    -   `deleted_at` (soft deletes)
-    -   `created_at`, `updated_at`
+- Mô tả: Camera gắn với showroom 
+- Cấu trúc:
+  - `id`
+  - `name` (string) — index
+  - `device_id` (string, nullable, unique) — SN (Serial Number) **[Refactored]**
+  - `channel_id` (unsignedTinyInteger, default 0, nullable) — Thường = 0 **[Refactored]**
+  - `device_model` (string, nullable) — Model camera **[Refactored]**
+  - `bind_status` (boolean, default false) — 0/1 – bind status **[Refactored]**
+  - `is_active` (boolean, default false) — 0/1 – active status **[Refactored]**
+  - `enable` (boolean, default false) — 0/1 – enable status **[Refactored]**
+  - `description` (string(255), nullable)
+  - `showroom_id` (FK, nullable) → `showrooms.id`, nullOnDelete, index
+  - `deleted_at` (soft deletes)
+  - `created_at`, `updated_at`
 
 ### `brands`
 
@@ -106,7 +103,7 @@
     -   `name` (string, unique)
     -   `logo` (string, nullable)
     -   `description` (string, nullable)
-    -   `is_active` (boolean, default true) — index
+    -   `is_active` (boolean, default true) — Trạng thái 
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
 
@@ -117,7 +114,7 @@
     -   `id`
     -   `name` (string, unique)
     -   `description` (string, nullable)
-    -   `is_active` (boolean, default true) — index
+    -   `is_active` (boolean, default true) — Trạng thái
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`  
 
@@ -133,21 +130,18 @@
     -   `colors` (json, nullable) — ví dụ: [{"name":"Màu","code":"#fff"}]
     -   `specifications` (json, nullable) — ví dụ: [{"name":"Thông số","value":"Giá trị"}]
     -   `features` (json, nullable) — ví dụ: [{"title":"Tính năng","description":"Giá trị"}]
+    -   `images` (json, nullable) — ví dụ: ["url1", "url2", ...] 
     -   `quantity` (integer, default 0)
-    -   `price` (decimal(10,2), default 0)
-    -   `sale_price` (decimal(10,2), default 0)
+    -   `price` (decimal(15,2), default 0)
+    -   `sale_price` (decimal(15,2), default 0)
     -   `is_active` (boolean, default true) — index
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
+-   **Lưu ý**: Bảng `product_images` đã bị xóa; ảnh lưu trữ dưới dạng JSON trong cột `images`.
 
 ### `product_images`
 
--   Mô tả: Ảnh sản phẩm.
--   Cấu trúc:
-    -   `id`
-    -   `product_id` (foreignId, nullable) — tham chiếu `products.id`, `nullOnDelete()`, index
-    -   `path` (string)
-    -   `created_at`, `updated_at`
+-   **[REMOVED]** — Bảng này đã bị xóa. Ảnh sản phẩm giờ lưu trữ dưới dạng JSON trong cột `images` của bảng `products`.
 
 ### `departments`
     
@@ -155,6 +149,7 @@
 -   Cấu trúc:
     -   `id`
     -   `name` (string, unique)
+    -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
 
 ### `users`
@@ -199,6 +194,5 @@
     -   `published_at` (timestamp, nullable) — index
     -   `source` (string, nullable)
     -   `is_active` (boolean, default true) — index
-    -   `created_by` (foreignId, nullable) — tham chiếu `users.id`, `nullOnDelete()`, index
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`

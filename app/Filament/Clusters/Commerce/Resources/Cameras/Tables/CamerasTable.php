@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Filament\Clusters\Organization\Resources\Users\Tables;
+namespace App\Filament\Clusters\Commerce\Resources\Cameras\Tables;
 
-use App\Enums\UserRole;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -12,47 +11,65 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class UsersTable
+class CamerasTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-
+                TextColumn::make('showroom.name')
+                    ->label('Showroom')
+                    ->searchable(),
                 TextColumn::make('name')
-                    ->label('Tên')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('email')
-                    ->label('Email')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('role')
-                    ->label('Vai trò')
-                    ->formatStateUsing(fn($state) => UserRole::getLabel($state))
-                    ->sortable(),
+                    ->label('Tên camera')
+                    ->searchable(),
+                TextColumn::make('users')
+                    ->label('Người dùng')
+                    ->getStateUsing(function ($record) {
+                        if (!$record->users || !is_array($record->users)) {
+                            return [];
+                        }
+
+                        return collect($record->users)->pluck('name')->all();
+                    }),
+                TextColumn::make('description')
+                    ->label('Mô tả')
+                    ->searchable(),
+                TextColumn::make('channel_id')
+                    ->label('Kênh')
+                    ->searchable(),
+                TextColumn::make('device_id')
+                    ->label('Thiết bị')
+                    ->searchable(),
+                TextColumn::make('device_model')
+                    ->label('Model')
+                    ->searchable(),
+                IconColumn::make('bind_status')
+                    ->label('Trạng thái kết nối')
+                    ->icon(fn ($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                    ->color(fn ($state) => $state ? 'success' : 'danger'),
+                IconColumn::make('enable')
+                    ->label('Trạng thái hoạt động')
+                    ->icon(fn ($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                    ->color(fn ($state) => $state ? 'success' : 'danger'),
+                ToggleColumn::make('is_active')
+                    ->label('Trạng thái khóa'),
                 TextColumn::make('created_at')
                     ->label('Ngày tạo')
-                    ->sortable(),
+                    ->searchable(),
                 TextColumn::make('updated_at')
                     ->label('Ngày cập nhật')
-                    ->sortable(),
-                TextColumn::make('department.name')
-                    ->label('Phòng ban')
-                    ->sortable(),
-                TextColumn::make("joined_at")
-                    ->label('Ngày đăng ký')
-                    ->date(),
-
-                ToggleColumn::make('is_active')
-                    ->label('Trạng thái')
-
+                    ->searchable(),
+            ])
+            ->filters([
+                TrashedFilter::make(),
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
@@ -82,12 +99,24 @@ class UsersTable
             ])
             ->filters([
                 TrashedFilter::make(),
-                SelectFilter::make('is_active')
+                SelectFilter::make('showroom_id')
+                    ->label('Showroom')
+                    ->searchable()
+                    ->options(function () {
+                        return \App\Models\Showroom::all()->pluck('name', 'id');
+                    }),
+                SelectFilter::make('enable')
+                    ->label('Trạng thái hoạt động')
                     ->options([
                         true => 'Kích hoạt',
                         false => 'Tắt',
-                    ])
-                    ->label('Trạng thái'),
+                    ]),
+                SelectFilter::make('is_active')
+                    ->label('Trạng thái khóa')
+                    ->options([
+                        true => 'Kích hoạt',
+                        false => 'Tắt',
+                    ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

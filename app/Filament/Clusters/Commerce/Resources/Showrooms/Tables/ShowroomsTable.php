@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Filament\Clusters\Organization\Resources\Users\Tables;
+namespace App\Filament\Clusters\Commerce\Resources\Showrooms\Tables;
 
-use App\Enums\UserRole;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -13,46 +12,57 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class UsersTable
+class ShowroomsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-
                 TextColumn::make('name')
-                    ->label('Tên')
-                    ->searchable()
-                    ->sortable(),
+                    ->label('Tên showroom')
+                    ->searchable(),
                 TextColumn::make('email')
                     ->label('Email')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('role')
-                    ->label('Vai trò')
-                    ->formatStateUsing(fn($state) => UserRole::getLabel($state))
-                    ->sortable(),
+                    ->searchable(),
+                TextColumn::make('hotlines')
+                    ->label('Số điện thoại Hotlines')
+                    ->getStateUsing(function ($record) {
+                        if (!$record->hotlines || !is_array($record->hotlines)) {
+                            return [];
+                        }
+
+                        return collect($record->hotlines)->pluck('phone')->all();
+                    })
+                    ->badge()
+                    ->listWithLineBreaks()
+                    ->limitList(3),
+                TextColumn::make('address')
+                    ->label('Địa chỉ')
+                    ->searchable(),
+                TextColumn::make('ward.name')
+                    ->label('Phường xã')
+                    ->searchable(),
+                TextColumn::make('district.name')
+                    ->label('Quận huyện')
+                    ->searchable(),
+                TextColumn::make('province.name')
+                    ->label('Tỉnh thành')
+                    ->searchable(),
+                TextColumn::make('weblink')
+                    ->label('Link website')
+                    ->searchable(),
+                TextColumn::make('description')
+                    ->label('Mô tả')
+                    ->searchable(),
                 TextColumn::make('created_at')
                     ->label('Ngày tạo')
-                    ->sortable(),
+                    ->searchable(),
                 TextColumn::make('updated_at')
                     ->label('Ngày cập nhật')
-                    ->sortable(),
-                TextColumn::make('department.name')
-                    ->label('Phòng ban')
-                    ->sortable(),
-                TextColumn::make("joined_at")
-                    ->label('Ngày đăng ký')
-                    ->date(),
-
-                ToggleColumn::make('is_active')
-                    ->label('Trạng thái')
-
+                    ->searchable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
@@ -82,12 +92,6 @@ class UsersTable
             ])
             ->filters([
                 TrashedFilter::make(),
-                SelectFilter::make('is_active')
-                    ->options([
-                        true => 'Kích hoạt',
-                        false => 'Tắt',
-                    ])
-                    ->label('Trạng thái'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

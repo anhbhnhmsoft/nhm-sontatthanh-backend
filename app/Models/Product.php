@@ -21,6 +21,7 @@ class Product extends Model
         'quantity',
         'price',
         'sale_price',
+        'images',
         'is_active',
     ];
 
@@ -29,6 +30,7 @@ class Product extends Model
         'specifications' => 'array',
         'features' => 'array',
         'is_active' => 'boolean',
+        'images' => 'array'
     ];
 
     public function brand()
@@ -39,10 +41,5 @@ class Product extends Model
     public function line()
     {
         return $this->belongsTo(Line::class);
-    }
-
-    public function images()
-    {
-        return $this->hasMany(ProductImage::class);
     }
 }

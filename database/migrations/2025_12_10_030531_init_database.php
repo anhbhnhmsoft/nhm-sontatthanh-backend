@@ -76,7 +76,6 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Tên cửa hàng')->index();
             $table->string('address')->comment('Địa chỉ cửa hàng');
-            $table->string('phone')->nullable()->comment('Số điện thoại cửa hàng')->index();
             $table->string('email')->nullable()->comment('Email cửa hàng')->index();
             $table->string('logo')->nullable()->comment('Logo cửa hàng');
             $table->string('description')->nullable()->comment('Mô tả cửa hàng');
@@ -101,13 +100,13 @@ return new class extends Migration
         Schema::create('cameras', function (Blueprint $table) {
             $table->id();
             $table->string('name')->comment('Tên camera')->index();
-            $table->string('ip_address')->comment('Địa chỉ IP camera');
-            $table->string('image')->comment('Ảnh camera');
-            $table->string('port')->comment('Port camera');
-            $table->string('app_id')->comment('App ID camera');
-            $table->string('api_key')->comment('API key camera');
-            $table->string('api_token')->comment('API token camera');
-            $table->string('description')->nullable()->comment('Mô tả camera');
+            $table->string('device_id')->nullable()->comment('SN – bắt buộc')->unique();
+            $table->unsignedTinyInteger('channel_id')->default(0)->nullable()->comment('Thường = 0');
+            $table->string('device_model')->nullable()->comment('Model camera');
+            $table->boolean('bind_status')->default(false)->comment('0/1 – bind hay chưa');
+            $table->boolean('is_active')->default(false)->comment('0/1 – active hay chưa');
+            $table->boolean('enable')->default(false)->comment('0/1 – enable hay chưa');
+            $table->string('description', 255)->nullable()->comment('Mô tả camera');
             $table->foreignId('showroom_id')->nullable()->constrained('showrooms')->nullOnDelete()->comment('Cửa hàng trưng bày')->index();
             $table->softDeletes();
             $table->timestamps();
@@ -123,6 +122,7 @@ return new class extends Migration
             $table->string('name')->comment('Tên thương hiệu')->unique(); // Unique Index: Tên thương hiệu là duy nhất
             $table->string('logo')->nullable()->comment('Logo thương hiệu');
             $table->string('description')->nullable()->comment('Mô tả thương hiệu');
+            $table->boolean('is_active')->default(true)->comment('Trạng thái thương hiệu');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -135,6 +135,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Tên dòng sản phẩm')->unique(); // Unique Index: Tên dòng sản phẩm là duy nhất
             $table->string('description')->nullable()->comment('Mô tả dòng sản phẩm');
+            $table->boolean('is_active')->default(true)->comment('Trạng thái dòng sản phẩm');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -152,25 +153,16 @@ return new class extends Migration
             $table->json('colors')->nullable()->comment('Màu sắc sản phẩm, cấu trúc: [ { "name": "Màu sắc", "code": "Màu sắc" } ]');
             $table->json('specifications')->nullable()->comment('Thông số sản phẩm, cấu trúc: [ { "name": "Thông số", "value": "Giá trị" } ]');
             $table->json('features')->nullable()->comment('Tính năng sản phẩm, cấu trúc: [ { "title": "Tính năng", "description": "Giá trị" } ]');
+            $table->json('images')->nullable()->comment('Ảnh sản phẩm, cấu trúc: [url1, url2, ...]');
             $table->integer('quantity')->default(0)->comment('Số lượng sản phẩm');
-            $table->decimal('price', 10, 2)->default(0)->comment('Giá sản phẩm');
-            $table->decimal('sale_price', 10, 2)->default(0)->comment('Giá sale sản phẩm');
+            $table->decimal('price', 15, 2)->default(0)->comment('Giá sản phẩm');
+            $table->decimal('sale_price', 15, 2)->default(0)->comment('Giá sale sản phẩm');
             $table->boolean('is_active')->default(true)->comment('Trạng thái sản phẩm ~ lock / unlock - tính năng khóa sản phẩm')->index(); // Index: Lọc theo trạng thái
             $table->softDeletes();
             $table->timestamps();
         });
 
-        /**
-         * Bảng product_images
-         * note: bảng ảnh sản phẩm
-         */
-        Schema::create('product_images', function (Blueprint $table) {
-            $table->id();
-            // Index: Khóa ngoại
-            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete()->comment('Sản phẩm')->index();
-            $table->string('path');
-            $table->timestamps();
-        });
+        // product_images table removed - images are now stored as json in products table
 
         /**
          * Bảng Deparments
@@ -179,6 +171,7 @@ return new class extends Migration
         Schema::create('departments', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique(); // Unique Index: Tên phòng ban là duy nhất
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -328,8 +321,7 @@ return new class extends Migration
         // Bảng có khóa ngoại tham chiếu đến users, cameras, products, departments, showrooms, brands, lines
         Schema::dropIfExists('news'); // Tham chiếu đến users
         Schema::dropIfExists('camera_user'); // Tham chiếu đến users và cameras
-        Schema::dropIfExists('product_images'); // Tham chiếu đến products
-        Schema::dropIfExists('products'); // Tham chiếu đến brands và lines
+        Schema::dropIfExists('products'); // Tham chiếu đến brands và lines (product_images đã được merge vào products)
         Schema::dropIfExists('cameras'); // Tham chiếu đến showrooms
         Schema::dropIfExists('users'); // Tham chiếu đến departments
         Schema::dropIfExists('showrooms'); // Tham chiếu đến provinces, districts, wards
