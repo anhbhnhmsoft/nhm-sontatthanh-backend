@@ -19,6 +19,7 @@ class News extends Model
         'published_at',
         'source',
         'is_active',
+        'view_count',
     ];
 
     protected $casts = [

@@ -64,6 +64,10 @@ class NewsForm
                                     ->validationMessages([
                                         'required' => 'Ngày đăng là bắt buộc',
                                     ]),
+                                TextInput::make('view_count')
+                                    ->label('Số lượt xem')
+                                    ->numeric()
+                                    ->default(0),
 
                                 RichEditor::make('content')
                                     ->label('Nội dung')

@@ -40,6 +40,9 @@ class NewsTable
                 TextColumn::make('source')
                     ->label('Nguồn')
                     ->searchable(),
+                TextColumn::make('view_count')
+                    ->label('Lượt xem')
+                    ->searchable(),
                 TextColumn::make('published_at')
                     ->label('Ngày đăng')
                     ->searchable()

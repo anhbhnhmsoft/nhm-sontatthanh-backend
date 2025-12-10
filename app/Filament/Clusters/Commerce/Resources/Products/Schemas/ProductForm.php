@@ -8,11 +8,12 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class ProductForm
@@ -46,15 +47,61 @@ class ProductForm
                                     ->label('Giá gốc')
                                     ->required()
                                     ->numeric()
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (Get $get, Set $set) {
+                                        $price = $get('price');
+                                        $discount = $get('discount_percent');
+                                        if ($price && is_numeric($price)) {
+                                            if ($discount && is_numeric($discount)) {
+                                                $set('sale_price', $price - ($price * $discount / 100));
+                                            } else {
+                                                $set('sale_price', $price);
+                                            }
+                                        }
+                                    })
                                     ->validationMessages([
                                         'required' => 'Giá sản phẩm không được để trống',
                                         'numeric' => 'Giá sản phẩm phải là số',
                                     ]),
-                                TextInput::make('sale_price')
-                                    ->label('Giá sale')
+                                TextInput::make('discount_percent')
+                                    ->label('Mức chiết khấu (%)')
                                     ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(100)
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (Get $get, Set $set) {
+                                        $price = $get('price');
+                                        $sale_price = $get('sale_price');
+                                        $discount = $get('discount_percent');
+                                        if ($price && is_numeric($price) && $discount !== null && is_numeric($discount) && $sale_price !== null && is_numeric($sale_price)) {
+                                            $set('price_discount', $price - ($price * $discount / 100));
+                                        } else {
+                                            $set('price_discount', $sale_price - ($sale_price * $discount / 100));
+                                        }
+                                    }),
+                                TextInput::make('sale_price')
+                                    ->label('Giá khuyến mãi')
+                                    ->numeric()
+                                    ->readOnly()
+                                    ->dehydrated()
                                     ->validationMessages([
-                                        'numeric' => 'Giá sale sản phẩm phải là số',
+                                        'numeric' => 'Giá khuyến mãi phải là số',
+                                    ]),
+                                TextInput::make('price_discount')
+                                    ->label('Phần sau chiết khấu')
+                                    ->numeric()
+                                    ->readOnly()
+                                    ->dehydrated()
+                                    ->validationMessages([
+                                        'numeric' => 'Phần sau chiết khấu phải là số',
+                                    ]),
+                                TextInput::make('sell_price')
+                                    ->label('Giá bán')
+                                    ->numeric()
+                                    ->readOnly()
+                                    ->dehydrated()
+                                    ->validationMessages([
+                                        'numeric' => 'Giá bán phải là số',
                                     ]),
                                 Select::make('brand')
                                     ->label('Thương hiệu')
