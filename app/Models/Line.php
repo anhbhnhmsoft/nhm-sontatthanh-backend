@@ -12,7 +12,12 @@ class Line extends Model
 
     protected $fillable = [
         'name',
+        'is_active',
         'description',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function products()

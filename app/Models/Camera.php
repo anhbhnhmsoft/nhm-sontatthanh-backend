@@ -20,6 +20,11 @@ class Camera extends Model
         'api_token',
         'description',
         'showroom_id',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function showroom()
