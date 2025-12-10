@@ -28,6 +28,8 @@ class User extends Authenticatable
         'is_active',
         'department_id',
         'password',
+        'email_verified_at',
+        'phone_verified_at',
     ];
 
     /**
@@ -49,8 +51,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
             'phone_verified_at' => 'datetime',
+            'password' => 'hashed',
             'joined_at' => 'datetime',
             'is_active' => 'boolean',
             'role' => 'integer',
