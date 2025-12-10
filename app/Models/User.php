@@ -20,6 +20,13 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'avatar',
+        'referral_code',
+        'role',
+        'joined_at',
+        'is_active',
+        'department_id',
         'password',
     ];
 
@@ -43,6 +50,20 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'phone_verified_at' => 'datetime',
+            'joined_at' => 'datetime',
+            'is_active' => 'boolean',
+            'role' => 'integer',
         ];
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function cameras()
+    {
+        return $this->belongsToMany(Camera::class, 'camera_user')->withTimestamps();
     }
 }
