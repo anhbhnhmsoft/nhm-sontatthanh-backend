@@ -14,6 +14,11 @@ class Brand extends Model
         'name',
         'logo',
         'description',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function products()

@@ -94,6 +94,7 @@
     -   `api_token` (string)
     -   `description` (string, nullable)
     -   `showroom_id` (foreignId, nullable) — tham chiếu `showrooms.id`, `nullOnDelete()`, index
+    -   `is_active` (boolean, default true) — index
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
 
@@ -105,6 +106,7 @@
     -   `name` (string, unique)
     -   `logo` (string, nullable)
     -   `description` (string, nullable)
+    -   `is_active` (boolean, default true) — index
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
 
@@ -115,8 +117,9 @@
     -   `id`
     -   `name` (string, unique)
     -   `description` (string, nullable)
+    -   `is_active` (boolean, default true) — index
     -   `deleted_at` (soft deletes)
-    -   `created_at`, `updated_at`
+    -   `created_at`, `updated_at`  
 
 ### `products`
 
@@ -147,7 +150,7 @@
     -   `created_at`, `updated_at`
 
 ### `departments`
-
+    
 -   Mô tả: Phòng ban.
 -   Cấu trúc:
     -   `id`
