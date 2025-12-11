@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Clusters\Commerce\Resources\Products\Tables;
+namespace App\Filament\Clusters\Media\Resources\Banners\Tables;
 
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -8,7 +8,6 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
@@ -18,59 +17,33 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class ProductsTable
+class BannersTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Tên sản phẩm')
+                    ->label('Tên banner')
+                    ->limit(25)
                     ->searchable(),
-                ImageColumn::make('images')
+                ImageColumn::make('image')
                     ->label('Hình ảnh')
                     ->disk('public'),
-                TextColumn::make('description')
-                    ->label('Mô tả')
-                    ->limit(100)
-                    ->html()
-                    ->searchable(),
-                TextColumn::make('price')
-                    ->label('Giá')
-                    ->numeric()
-                    ->money('VND'),
-                TextColumn::make('price_discount')
-                    ->label('Còn lại chiết khấu')
-                    ->numeric()
-                    ->money('VND'),
-                TextColumn::make('sell_price')
-                    ->label('Giá bán')
-                    ->numeric()
-                    ->money('VND'),
-                TextColumn::make('discount_percent')
-                    ->label('Chiết khấu')
-                    ->numeric(),
-                TextColumn::make('sale_price')
-                    ->label('Giá khuyến mãi')
-                    ->numeric()
-                    ->money('VND'),
-                TextColumn::make('brand.name')
-                    ->label('Thương hiệu')
-                    ->searchable(),
-                TextColumn::make('line.name')
-                    ->label('Dòng sản phẩm')
-                    ->searchable(),
-                TextColumn::make('quantity')
-                    ->label('Số lượng')
-                    ->numeric(),
-                TextColumn::make('created_at')
-                    ->label('Ngày tạo')
-                    ->searchable(),
-                TextColumn::make('updated_at')
-                    ->label('Ngày cập nhật')
+                TextColumn::make('position')
+                    ->label('Vị trí')
                     ->searchable(),
                 ToggleColumn::make('is_active')
-                    ->label('Trạng thái'),
+                    ->label('Trạng thái')
+                    ->searchable(),
+                TextColumn::make('created_at')
+                    ->label('Ngày tạo')
+                    ->searchable()
+                    ->dateTime(),
+                TextColumn::make('updated_at')
+                    ->label('Ngày cập nhật')
+                    ->searchable()
+                    ->dateTime(),
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
@@ -92,7 +65,7 @@ class ProductsTable
                         ->modalSubmitActionLabel('Xác nhận xóa')
                         ->visible(fn($record) => ! $record->trashed()),
 
-                    RestoreAction::make()
+                    RestoreBulkAction::make()
                         ->label('Khôi phục')
                         ->icon('heroicon-o-arrow-path')
                         ->visible(fn($record) => $record->trashed()),

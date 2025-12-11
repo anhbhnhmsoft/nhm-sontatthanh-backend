@@ -1,76 +1,60 @@
 <?php
 
-namespace App\Filament\Clusters\Commerce\Resources\Products\Tables;
+namespace App\Filament\Clusters\Media\Resources\News\Tables;
 
+use App\Enums\NewsType;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class ProductsTable
+class NewsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->label('Tên sản phẩm')
+                TextColumn::make('title')
+                    ->label('Tiêu đề')
                     ->searchable(),
-                ImageColumn::make('images')
+                ImageColumn::make('image')
                     ->label('Hình ảnh')
                     ->disk('public'),
                 TextColumn::make('description')
                     ->label('Mô tả')
-                    ->limit(100)
-                    ->html()
+                    ->limit(50)
                     ->searchable(),
-                TextColumn::make('price')
-                    ->label('Giá')
-                    ->numeric()
-                    ->money('VND'),
-                TextColumn::make('price_discount')
-                    ->label('Còn lại chiết khấu')
-                    ->numeric()
-                    ->money('VND'),
-                TextColumn::make('sell_price')
-                    ->label('Giá bán')
-                    ->numeric()
-                    ->money('VND'),
-                TextColumn::make('discount_percent')
-                    ->label('Chiết khấu')
-                    ->numeric(),
-                TextColumn::make('sale_price')
-                    ->label('Giá khuyến mãi')
-                    ->numeric()
-                    ->money('VND'),
-                TextColumn::make('brand.name')
-                    ->label('Thương hiệu')
+                TextColumn::make('type')
+                    ->label('Loại tin tức')
+                    ->formatStateUsing(fn($state) => NewsType::getLabel($state))
                     ->searchable(),
-                TextColumn::make('line.name')
-                    ->label('Dòng sản phẩm')
+                TextColumn::make('source')
+                    ->label('Nguồn')
                     ->searchable(),
-                TextColumn::make('quantity')
-                    ->label('Số lượng')
-                    ->numeric(),
+                TextColumn::make('view_count')
+                    ->label('Lượt xem')
+                    ->searchable(),
+                TextColumn::make('published_at')
+                    ->label('Ngày đăng')
+                    ->searchable()
+                    ->dateTime(),
                 TextColumn::make('created_at')
                     ->label('Ngày tạo')
-                    ->searchable(),
+                    ->searchable()
+                    ->dateTime(),
                 TextColumn::make('updated_at')
                     ->label('Ngày cập nhật')
-                    ->searchable(),
-                ToggleColumn::make('is_active')
-                    ->label('Trạng thái'),
+                    ->searchable()
+                    ->dateTime(),
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
@@ -92,7 +76,7 @@ class ProductsTable
                         ->modalSubmitActionLabel('Xác nhận xóa')
                         ->visible(fn($record) => ! $record->trashed()),
 
-                    RestoreAction::make()
+                    RestoreBulkAction::make()
                         ->label('Khôi phục')
                         ->icon('heroicon-o-arrow-path')
                         ->visible(fn($record) => $record->trashed()),

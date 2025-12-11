@@ -6,24 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class News extends Model
+class Banner extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'title',
-        'description',
-        'content',
+        'name',
         'image',
-        'type',
-        'published_at',
-        'source',
         'is_active',
-        'view_count',
+        'position',
     ];
 
     protected $casts = [
-        'published_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 }
