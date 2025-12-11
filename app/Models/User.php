@@ -74,4 +74,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Camera::class, 'camera_user')->withTimestamps();
     }
+
+    public function managedSales()
+    {
+        return $this->hasMany(User::class, 'sale_id');
+    }
 }

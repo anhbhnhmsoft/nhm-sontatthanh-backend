@@ -49,7 +49,11 @@ class UsersTable
                 TextColumn::make("joined_at")
                     ->label('Ngày đăng ký')
                     ->date(),
-
+                TextColumn::make("managedSales.name")
+                    ->label('CTV')
+                    ->badge()
+                    ->listWithLineBreaks()
+                    ->limitList(5),
                 ToggleColumn::make('is_active')
                     ->label('Trạng thái')
 
