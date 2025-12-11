@@ -13,7 +13,6 @@ class Showroom extends Model
     protected $fillable = [
         'name',
         'address',
-        'phone',
         'email',
         'logo',
         'description',

@@ -12,19 +12,21 @@ class Camera extends Model
 
     protected $fillable = [
         'name',
-        'ip_address',
-        'image',
-        'port',
-        'app_id',
-        'api_key',
-        'api_token',
         'description',
+        'image',
         'showroom_id',
         'is_active',
+        'device_id',
+        'channel_id',
+        'device_model',
+        'bind_status',
+        'enable',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'bind_status' => 'boolean',
+        'enable' => 'boolean',
     ];
 
     public function showroom()

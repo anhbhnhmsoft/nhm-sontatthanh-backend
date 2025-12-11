@@ -31,7 +31,7 @@ class DepartmentsTable
                     ->label('Nhân viên')
                     ->badge()
                     ->listWithLineBreaks()
-                    ->limitList(3),
+                    ->limitList(5),
 
                 TextColumn::make('users_count')
                     ->label('SL Nhân viên')
