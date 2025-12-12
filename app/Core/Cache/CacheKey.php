@@ -25,6 +25,10 @@ enum CacheKey: string
     case CACHE_KEY_REGISTER_TOKEN = 'CACHE_KEY_REGISTER_TOKEN';
 
     /**
+     * Lưu trạng thái block đăng ký otp
+     */
+    case CACHE_KEY_OTP_REGISTER_BLOCK = 'CACHE_KEY_OTP_REGISTER_BLOCK';
+    /**
      * Lưu cấu hình hệ thống.
      */
     case CACHE_KEY_CONFIG = 'CACHE_KEY_CONFIG';
@@ -38,5 +42,4 @@ enum CacheKey: string
      * Lưu thông tin file của người dùng.
      */
     case CACHE_USER_FILE = 'CACHE_USER_FILE';
-
 }

@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
     {
         // Run additional seed routines (skip in production)
         // $this->seedProvince();
-        // $this->seedAdmin();
+        $this->seedAdmin();
         $this->seedConfig();
     }
 
@@ -107,7 +107,7 @@ class DatabaseSeeder extends Seeder
                 ['email' => 'admin@admin.vn'],
                 [
                     'name' => 'Super Admin',
-                    'email' => 'admin@admin.vn',
+                    'phone' => '0123456789',
                     'password' => bcrypt('Test12345678@'),
                     'role' => UserRole::ADMIN->value,
                     'is_active' => true,

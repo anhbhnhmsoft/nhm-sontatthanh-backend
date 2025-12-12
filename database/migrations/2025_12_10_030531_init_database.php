@@ -245,6 +245,17 @@ return new class extends Migration
 
         // default schema
 
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('tokenable');
+            $table->text('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable()->index();
+            $table->timestamps();
+        });
+
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('phone')->primary();
             $table->string('token');
@@ -330,6 +341,7 @@ return new class extends Migration
         Schema::dropIfExists('jobs');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('personal_access_tokens');
 
         // Custom Schema - Xóa theo thứ tự phụ thuộc (bảng con trước, bảng cha sau)
 
