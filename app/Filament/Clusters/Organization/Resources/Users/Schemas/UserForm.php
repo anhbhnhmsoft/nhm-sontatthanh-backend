@@ -12,6 +12,7 @@ use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserForm
 {
@@ -62,11 +63,9 @@ class UserForm
                         Section::make()
                             ->schema([
                                 TextInput::make('address')
-                                    ->required()
                                     ->maxLength(255)
                                     ->label('Địa chỉ')
                                     ->validationMessages([
-                                        'required' => 'Vui lòng nhập địa chỉ',
                                         'max_length' => 'Địa chỉ không được vượt quá 255 ký tự',
                                     ]),
                                 Select::make('department_id')
@@ -101,7 +100,28 @@ class UserForm
                                         Toggle::make('is_active')
                                             ->label('Trạng thái')
                                             ->default(true),
-                                    ])
+                                    ]),
+                                Select::make('managedSales')
+                                    ->label('Danh sách CTV đang quản lý')
+                                    ->multiple()
+                                    ->relationship(
+                                        name: 'managedSales',
+                                        titleAttribute: 'name',
+                                        modifyQueryUsing: fn(Builder $query, $livewire) => $query
+                                            ->where('role', UserRole::CTV->value)
+
+                                            ->where(function (Builder $q) use ($livewire) {
+                                                $q->whereNull('sale_id')
+                                                    ->orWhere('sale_id', $livewire->record->id);
+                                            })
+
+                                            ->whereNot('id', $livewire->record->id)
+                                    )
+                                    ->hidden(fn($livewire) => $livewire->record?->role !== UserRole::SALE->value)
+                                    ->searchable()
+                                    ->preload()
+                                    ->columnSpanFull(),
+
                             ])
                     ])->columnSpanFull(),
             ]);

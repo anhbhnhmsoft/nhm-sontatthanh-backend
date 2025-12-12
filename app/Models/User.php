@@ -31,6 +31,7 @@ class User extends Authenticatable
         'password',
         'email_verified_at',
         'phone_verified_at',
+        'sale_id',
     ];
 
     /**
@@ -65,8 +66,18 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    public function sale()
+    {
+        return $this->belongsTo(User::class, 'sale_id');
+    }
+
     public function cameras()
     {
         return $this->belongsToMany(Camera::class, 'camera_user')->withTimestamps();
+    }
+
+    public function managedSales()
+    {
+        return $this->hasMany(User::class, 'sale_id');
     }
 }

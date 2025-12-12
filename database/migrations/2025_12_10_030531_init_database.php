@@ -158,6 +158,9 @@ return new class extends Migration
             $table->integer('quantity')->default(0)->comment('Số lượng sản phẩm');
             $table->decimal('price', 15, 2)->default(0)->comment('Giá sản phẩm');
             $table->decimal('sale_price', 15, 2)->default(0)->comment('Giá sale sản phẩm');
+            $table->integer('discount_percent')->default(0)->nullable()->comment('Phần trăm chiết khấu');
+            $table->decimal('sell_price', 15, 2)->default(0)->comment('Giá bán');
+            $table->decimal('price_discount', 15, 2)->default(0)->comment('Phần sau chiết khấu');
             $table->boolean('is_active')->default(true)->comment('Trạng thái sản phẩm ~ lock / unlock - tính năng khóa sản phẩm')->index(); // Index: Lọc theo trạng thái
             $table->softDeletes();
             $table->timestamps();
@@ -193,10 +196,12 @@ return new class extends Migration
             $table->timestamp('joined_at')->default(now())->comment('Thời gian tham vào công ty ~ thời gian bắt đầu sử dụng hệ thống');
             $table->boolean('is_active')->default(true)->comment('Trạng thái người dùng ~ lock / unlock - tính năng khóa tài khoản')->index(); // Index: Lọc theo trạng thái
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban')->index();
+            $table->unsignedBigInteger('sale_id')->nullable()->comment('Người bán quản lý - tham chiếu đến user khác');
             $table->string('password');
             $table->rememberToken();
             $table->softDeletes();
             $table->timestamps();
+            $table->foreign('sale_id')->references('id')->on('users')->nullOnDelete();
         });
 
         /**
@@ -224,6 +229,7 @@ return new class extends Migration
             $table->timestamp('published_at')->nullable()->comment('Thời gian đăng tin tức')->index(); // Index: Sắp xếp theo thời gian đăng
             $table->string('source')->nullable()->comment('Nguồn tin tức');
             $table->boolean('is_active')->default(true)->comment('Trạng thái tin tức ~ lock / unlock - tính năng khóa tin tức')->index(); // Index: Lọc theo trạng thái
+            $table->bigInteger('view_count')->default(0)->comment('Số lượt xem tin tức')->index();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->comment('Người tạo');
             $table->softDeletes();
             $table->timestamps();

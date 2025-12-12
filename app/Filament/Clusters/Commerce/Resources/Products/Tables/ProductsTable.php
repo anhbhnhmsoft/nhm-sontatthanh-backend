@@ -39,6 +39,17 @@ class ProductsTable
                     ->label('Giá')
                     ->numeric()
                     ->money('VND'),
+                TextColumn::make('price_discount')
+                    ->label('Còn lại chiết khấu')
+                    ->numeric()
+                    ->money('VND'),
+                TextColumn::make('sell_price')
+                    ->label('Giá bán')
+                    ->numeric()
+                    ->money('VND'),
+                TextColumn::make('discount_percent')
+                    ->label('Chiết khấu')
+                    ->numeric(),
                 TextColumn::make('sale_price')
                     ->label('Giá khuyến mãi')
                     ->numeric()

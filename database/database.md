@@ -133,8 +133,11 @@
     -   `features` (json, nullable) — ví dụ: [{"title":"Tính năng","description":"Giá trị"}]
     -   `images` (json, nullable) — ví dụ: ["url1", "url2", ...] 
     -   `quantity` (integer, default 0)
-    -   `price` (decimal(15,2), default 0)
-    -   `sale_price` (decimal(15,2), default 0)
+    -   `price` (decimal(15,2), default 0) — Giá gốc sản phẩm
+    -   `sale_price` (decimal(15,2), default 0) — Giá sale sản phẩm
+    -   `discount_percent` (integer, default 0, nullable) — Phần trăm chiết khấu
+    -   `sell_price` (decimal(15,2), default 0) — Giá bán cuối cùng
+    -   `price_discount` (decimal(15,2), default 0) — Giá sau khi áp dụng chiết khấu
     -   `is_active` (boolean, default true) — index
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
@@ -167,8 +170,10 @@
     -   `joined_at` (timestamp, default now())
     -   `is_active` (boolean, default true) — index
     -   `department_id` (foreignId, nullable) — tham chiếu `departments.id`, `nullOnDelete()`, index
+    -   `sale_id` (unsignedBigInteger, nullable, FK) → `users.id`, nullOnDelete — người bán quản lý
     -   `password` (string)
     -   `remember_token`
+    -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
 
 ### `camera_user`
@@ -193,6 +198,8 @@
     -   `published_at` (timestamp, nullable) — index
     -   `source` (string, nullable)
     -   `is_active` (boolean, default true) — index
+    -   `view_count` (bigInteger, default 0) — Số lượt xem, index
+    -   `created_by` (foreignId, nullable) — tham chiếu `users.id`, `nullOnDelete()`
     -   `deleted_at` (soft deletes)
     -   `created_at`, `updated_at`
 
