@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Media\Resources\News\Schemas;
 
+use App\Enums\DirectFile;
 use App\Enums\NewsType;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
@@ -32,6 +33,7 @@ class NewsForm
                                 FileUpload::make('image')
                                     ->label('Hình ảnh')
                                     ->required()
+                                    ->directory(DirectFile::NEWS->value)
                                     ->disk('public')
                                     ->image()
                                     ->maxSize(10240)

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Category\Resources\Brands\Schemas;
 
+use App\Enums\DirectFile;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -33,7 +34,7 @@ class BrandForm
                             ->label('Logo')
                             ->image()
                             ->disk('public')
-                            ->directory('brands')
+                            ->directory(DirectFile::BRANDS->value)
                             ->required()
                             ->validationMessages([
                                 'required' => 'Vui lòng chọn logo',

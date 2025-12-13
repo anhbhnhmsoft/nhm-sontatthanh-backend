@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Commerce\Resources\Products\Schemas;
 
+use App\Enums\DirectFile;
 use Dom\Text;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
@@ -134,7 +135,7 @@ class ProductForm
                                     ->image()
                                     ->reorderable()
                                     ->disk('public')
-                                    ->directory('product-images')
+                                    ->directory(DirectFile::PRODUCTS->value)
                                     ->minFiles(1)
                                     ->maxFiles(10)
                                     ->columnSpanFull()

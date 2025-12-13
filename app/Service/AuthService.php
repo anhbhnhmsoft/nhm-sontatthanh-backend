@@ -8,8 +8,10 @@ use App\Core\LogHelper;
 use App\Core\Service\BaseService;
 use App\Core\Service\ServiceException;
 use App\Core\Service\ServiceReturn;
+use App\Enums\DirectFile;
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -365,7 +367,7 @@ class AuthService extends BaseService
 
             // tiến hành ghi vào db
             $user = $this->userModel->create($userReal);
-            
+
 
             // Xóa cache
             Caching::deleteCache(key: CacheKey::CACHE_KEY_OTP_REGISTER, uniqueKey: $phone);
@@ -386,6 +388,9 @@ class AuthService extends BaseService
         }
     }
 
+    /**
+     * Logout
+     */
     public function logout(): ServiceReturn
     {
         try {
@@ -400,6 +405,40 @@ class AuthService extends BaseService
         } catch (\Throwable $th) {
             LogHelper::error(
                 'Lỗi xảy ra ở AuthService@logout :',
+                $th
+            );
+            return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');
+        }
+    }
+
+    /**
+     * Cập nhật thông tin user
+     */
+    public function editProfile(?string $name, ?UploadedFile $avatar, ?string $oldPassword, ?string $newPassword): ServiceReturn
+    {
+        try {
+            /**
+             * @var \App\Models\User $user
+             */
+            $user = Auth::user();
+            if ($oldPassword && $newPassword) {
+                if (!Hash::check($oldPassword, $user->password)) {
+                    return ServiceReturn::error('Mật khẩu cũ không chính xác');
+                }
+                $user->password = $newPassword;
+            }
+            if ($name && isset($name)) {
+                $user->name = $name;
+            }
+            if ($avatar && $avatar->isValid()) {
+                $user->avatar = $avatar->store(DirectFile::AVATARS->value, 'public');
+            }
+            $user->save();
+
+            return ServiceReturn::success($user, 'Cập nhật thông tin thành công');
+        } catch (\Throwable $th) {
+            LogHelper::error(
+                'Lỗi xảy ra ở AuthService@editProfile :',
                 $th
             );
             return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');

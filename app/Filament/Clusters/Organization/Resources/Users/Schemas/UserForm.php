@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Organization\Resources\Users\Schemas;
 
+use App\Enums\DirectFile;
 use App\Enums\UserRole;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -35,7 +36,7 @@ class UserForm
                                 FileUpload::make('avatar')
                                     ->image()
                                     ->disk('public')
-                                    ->directory('users')
+                                    ->directory(DirectFile::AVATARS->value)
                                     ->label('Ảnh đại diện'),
                                 TextInput::make('email')
                                     ->required()

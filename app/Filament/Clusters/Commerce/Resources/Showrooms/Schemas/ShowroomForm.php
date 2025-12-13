@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Commerce\Resources\Showrooms\Schemas;
 
+use App\Enums\DirectFile;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -44,7 +45,7 @@ class ShowroomForm
                         FileUpload::make('logo')
                             ->label('Logo')
                             ->disk('public')
-                            ->directory('showrooms')
+                            ->directory(DirectFile::SHOWROOMS->value)
                             ->required()
                             ->image(),
                         Textarea::make('description')

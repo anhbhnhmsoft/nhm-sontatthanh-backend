@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Core\Controller\BaseController;
+use App\Http\Requests\Auth\EditProfileRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResendOtpRequest;
@@ -10,6 +11,7 @@ use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
 use App\Service\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends BaseController
 {
@@ -119,6 +121,40 @@ class AuthController extends BaseController
     public function logout(): JsonResponse
     {
         $result = $this->authService->logout();
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+            );
+        }
+
+        return $this->sendSuccess(
+            $result->getMessage()
+        );
+    }
+
+    /**
+     * Lấy thông tin user
+     */
+    public function me(): JsonResponse
+    {
+        $result = Auth::user();
+
+        return $this->sendSuccess(
+            [
+                'user' => UserResource::make($result),
+            ]
+        );
+    }
+
+    public function editProfile(EditProfileRequest $request): JsonResponse
+    {
+        $result = $this->authService->editProfile(
+            $request->validated('name'),
+            $request->validated('avatar'),
+            $request->validated('old_password'),
+            $request->validated('new_password'),
+        );
 
         if ($result->isError()) {
             return $this->sendError(
