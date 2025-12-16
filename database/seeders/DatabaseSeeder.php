@@ -24,9 +24,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Run additional seed routines (skip in production)
-        // $this->seedProvince();
-        $this->seedAdmin();
-        $this->seedConfig();
+        $this->seedProvince();
+        // $this->seedAdmin();
+        // $this->seedConfig();
     }
 
     private function seedProvince()

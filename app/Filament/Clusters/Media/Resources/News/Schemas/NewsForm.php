@@ -43,9 +43,9 @@ class NewsForm
                                     ]),
                                 TextInput::make('description')
                                     ->label('Mô tả')
-                                    ->required()
+                                    ->maxLength(255)
                                     ->validationMessages([
-                                        'required' => 'Mô tả là bắt buộc',
+                                        'max_length' => 'Mô tả không được vượt quá 255 ký tự',
                                     ]),
                                 Select::make('type')
                                     ->label('Loại tin tức')
@@ -56,9 +56,9 @@ class NewsForm
                                     ]),
                                 TextInput::make("source")
                                     ->label('Nguồn')
-                                    ->required()
+                                    ->maxLength(255)
                                     ->validationMessages([
-                                        'required' => 'Nguồn là bắt buộc',
+                                        'max_length' => 'Nguồn không được vượt quá 255 ký tự',
                                     ]),
                                 DateTimePicker::make('published_at')
                                     ->label('Ngày đăng')
@@ -68,6 +68,7 @@ class NewsForm
                                     ]),
                                 TextInput::make('view_count')
                                     ->label('Số lượt xem')
+                                    ->disabled()
                                     ->numeric()
                                     ->default(0),
 

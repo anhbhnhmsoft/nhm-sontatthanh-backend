@@ -30,7 +30,7 @@ class ProductsTable
                 ImageColumn::make('images')
                     ->label('Hình ảnh')
                     ->disk('public'),
-                TextColumn::make('description')
+                TextColumn::make('description') 
                     ->label('Mô tả')
                     ->limit(100)
                     ->html()
@@ -40,7 +40,7 @@ class ProductsTable
                     ->numeric()
                     ->money('VND'),
                 TextColumn::make('price_discount')
-                    ->label('Còn lại chiết khấu')
+                    ->label('Chiết khấu sale nhận được')
                     ->numeric()
                     ->money('VND'),
                 TextColumn::make('sell_price')
@@ -48,7 +48,7 @@ class ProductsTable
                     ->numeric()
                     ->money('VND'),
                 TextColumn::make('discount_percent')
-                    ->label('Chiết khấu')
+                    ->label('Mức chiết khấu (%)')
                     ->numeric(),
                 TextColumn::make('sale_price')
                     ->label('Giá khuyến mãi')

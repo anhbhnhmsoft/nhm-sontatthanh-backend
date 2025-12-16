@@ -28,6 +28,7 @@ class User extends Authenticatable
         'joined_at',
         'is_active',
         'department_id',
+        'showroom_id',
         'password',
         'email_verified_at',
         'phone_verified_at',
@@ -79,5 +80,9 @@ class User extends Authenticatable
     public function managedSales()
     {
         return $this->hasMany(User::class, 'sale_id');
+    }
+
+    public function showroom () {
+        return $this->belongsTo(Showroom::class, 'showroom_id');
     }
 }

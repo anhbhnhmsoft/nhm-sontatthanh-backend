@@ -15,17 +15,25 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        if($this->role == UserRole::SALE->value) {
-            $deparment = $this->department;
-            $managedSales = $this->managedSales;
-            $cameras = $this->cameras;
+        if ($this->role == UserRole::SALE->value) {
+            $department = [
+                'id' => (string) $this->department->id,
+                'name' => $this->department->name,
+            ];
+            $showroom = [
+                'id' => (string) $this->showroom->id,
+                'name' => $this->showroom->name,
+                'address' => $this->showroom->address,
+                'phone' => $this->showroom->phone,
+                'email' => $this->showroom->email,
+                'logo' => $this->showroom->logo,
+            ];
         } else {
-            $deparment = null;
-            $managedSales = null;
-            $cameras = null;
+            $department = null;
+            $showroom = null;
         }
         return [
-            'id' => $this->id,
+            'id' => (string) $this->id,
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
@@ -36,9 +44,8 @@ class UserResource extends JsonResource
             'is_active' => $this->is_active,
             'department_id' => $this->department_id,
             'sale_id' => $this->sale_id,
-            'department' => $deparment,
-            'managed_sales' => $managedSales,
-            'cameras' => $cameras,
+            'department' =>  $department ?? null,
+            'showroom' => $showroom ?? null,
         ];
     }
 }

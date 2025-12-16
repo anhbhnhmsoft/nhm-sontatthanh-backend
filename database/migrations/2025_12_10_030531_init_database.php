@@ -195,7 +195,8 @@ return new class extends Migration
             $table->unsignedTinyInteger('role')->default(0)->comment('Vai trò người dùng trong enum UserRole')->index();
             $table->timestamp('joined_at')->default(now())->comment('Thời gian tham vào công ty ~ thời gian bắt đầu sử dụng hệ thống');
             $table->boolean('is_active')->default(true)->comment('Trạng thái người dùng ~ lock / unlock - tính năng khóa tài khoản')->index(); // Index: Lọc theo trạng thái
-            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban')->index();
+            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban');
+            $table->foreignId('showroom_id')->nullable()->constrained('showrooms')->nullOnDelete()->comment('Showroom làm việc');
             $table->unsignedBigInteger('sale_id')->nullable()->comment('Người bán quản lý - tham chiếu đến user khác');
             $table->string('password');
             $table->rememberToken();
@@ -353,7 +354,7 @@ return new class extends Migration
 
         // Bảng có khóa ngoại tham chiếu đến users, cameras, products, departments, showrooms, brands, lines
         Schema::dropIfExists('news'); // Tham chiếu đến users
-        Schema::dropIfExists('banners'); 
+        Schema::dropIfExists('banners');
         Schema::dropIfExists('camera_user'); // Tham chiếu đến users và cameras
         Schema::dropIfExists('products'); // Tham chiếu đến brands và lines (product_images đã được merge vào products)
         Schema::dropIfExists('cameras'); // Tham chiếu đến showrooms

@@ -3,6 +3,9 @@
 namespace App\Filament\Clusters\Commerce\Resources\Showrooms\Schemas;
 
 use App\Enums\DirectFile;
+use App\Models\District;
+use App\Models\Province;
+use App\Models\Ward;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -33,11 +36,9 @@ class ShowroomForm
                                     ]),
                                 TextInput::make('email')
                                     ->label('Email')
-                                    ->required()
                                     ->maxLength(255)
                                     ->email()
                                     ->validationMessages([
-                                        'required' => 'Vui lòng nhập email',
                                         'maxLength' => 'Email không được vượt quá 255 ký tự',
                                         'email' => 'Email không hợp lệ',
                                     ]),
@@ -50,19 +51,15 @@ class ShowroomForm
                             ->image(),
                         Textarea::make('description')
                             ->label('Mô tả')
-                            ->required()
                             ->maxLength(255)
                             ->validationMessages([
-                                'required' => 'Vui lòng nhập mô tả',
                                 'maxLength' => 'Mô tả không được vượt quá 255 ký tự',
                             ]),
                         TextInput::make('weblink')
                             ->label('Link website')
-                            ->required()
                             ->url()
                             ->maxLength(255)
                             ->validationMessages([
-                                'required' => 'Vui lòng nhập link website',
                                 'maxLength' => 'Link website không được vượt quá 255 ký tự',
                                 'url' => 'Link website không hợp lệ',
                             ]),
@@ -72,23 +69,23 @@ class ShowroomForm
                         Grid::make()
                             ->columns(3)
                             ->schema([
-                                Select::make('province')
+                                Select::make('province_code')
                                     ->label('Tỉnh thành')
-                                    ->relationship('province', 'name')
+                                    ->options(fn() => Province::all()->pluck('name', 'code'))
                                     ->required()
                                     ->searchable()
                                     ->live()
-                                    ->afterStateUpdated(fn($set) => $set('district', null)),
-                                Select::make('district')
+                                    ->afterStateUpdated(fn($set) => $set('district_code', null)),
+                                Select::make('district_code')
                                     ->label('Quận huyện')
-                                    ->relationship('district', 'name')
+                                    ->options(fn($get) => District::where('province_code', $get('province_code'))->pluck('name', 'code'))
                                     ->required()
                                     ->searchable()
                                     ->live()
-                                    ->afterStateUpdated(fn($set) => $set('ward', null)),
-                                Select::make('ward')
+                                    ->afterStateUpdated(fn($set) => $set('ward_code', null)),
+                                Select::make('ward_code')
                                     ->label('Phường xã')
-                                    ->relationship('ward', 'name')
+                                    ->options(fn($get) => Ward::where('district_code', $get('district_code'))->pluck('name', 'code'))
                                     ->required()
                                     ->searchable()
                                     ->live(),
@@ -124,6 +121,7 @@ class ShowroomForm
                                         TextInput::make('phone')
                                             ->label('Số điện thoại')
                                             ->required()
+                                            ->numeric()
                                             ->maxLength(255)
                                             ->tel()
                                             ->validationMessages([

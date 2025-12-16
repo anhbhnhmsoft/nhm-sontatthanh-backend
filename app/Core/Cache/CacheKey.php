@@ -42,4 +42,39 @@ enum CacheKey: string
      * Lưu thông tin file của người dùng.
      */
     case CACHE_USER_FILE = 'CACHE_USER_FILE';
+
+    /**
+     * Lưu lại thư viện camera của sale
+     */
+    case CACHE_SALE_CAMERA = 'CACHE_SALE_CAMERA';
+
+    /**
+     * Lưu lại danh sách showroom
+     */
+    case CACHE_SHOWROOM = 'CACHE_SHOWROOM';
+
+    /**
+     * Lưu lại danh sách banner
+     */
+    case CACHE_BANNER = 'CACHE_BANNER';
+
+    /**
+     * Lưu lại danh sách banner
+     */
+    case CACHE_BRAND = 'CACHE_BRAND';
+
+    /**
+     * Lưu lại danh sách line
+     */
+    case CACHE_LINE = 'CACHE_LINE';
+
+    /**
+     * Lưu lại danh sách product
+     */
+    case CACHE_PRODUCT = 'CACHE_PRODUCT';
+
+    /**
+     * Lưu lại danh sách news
+     */
+    case CACHE_NEWS = 'CACHE_NEWS';
 }
