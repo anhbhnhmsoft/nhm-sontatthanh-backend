@@ -20,7 +20,7 @@ class ShowroomResource extends JsonResource
             'address' => $this->address,
             'phone' => $this->phone,
             'email' => $this->email,
-            'logo' => $this->logo,
+            'logo' => Storage::disk('public')->url($this->logo) ?? null,
         ];
     }
 }

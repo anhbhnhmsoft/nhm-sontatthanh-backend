@@ -45,5 +45,5 @@ Route::prefix('news')->group(function () {
 });
 
 Route::prefix('file')->group(function () {
-    Route::get('/{path}', [FileController::class, 'download'])->where('path', '.*');
+    Route::get('/{path}', [FileController::class, 'download'])->where('path', '.*')->name('file.download');
 });

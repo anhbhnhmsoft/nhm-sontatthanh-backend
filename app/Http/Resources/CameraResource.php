@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class CameraResource extends JsonResource
 {
@@ -18,7 +19,7 @@ class CameraResource extends JsonResource
             'id' => (string) $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'image' => $this->image,
+            'image' => Storage::disk('public')->url($this->image) ?? null,
             'is_active' => $this->is_active,
             'device_id' => $this->device_id,
             'channel_id' => $this->channel_id,

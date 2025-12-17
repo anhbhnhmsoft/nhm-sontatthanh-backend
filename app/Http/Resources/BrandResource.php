@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class BrandResource extends JsonResource
 {
@@ -17,7 +18,7 @@ class BrandResource extends JsonResource
         return [
             'id' => (string) $this->id,
             'name' => $this->name,
-            'logo' => $this->logo,
+            'logo' => Storage::disk('public')->url($this->logo) ?? null,
             'description' => $this->description,
             'is_active' => $this->is_active,
         ];

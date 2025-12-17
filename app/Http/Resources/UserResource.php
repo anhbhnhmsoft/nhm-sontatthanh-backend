@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class UserResource extends JsonResource
 {
@@ -26,7 +27,7 @@ class UserResource extends JsonResource
                 'address' => $this->showroom->address,
                 'phone' => $this->showroom->phone,
                 'email' => $this->showroom->email,
-                'logo' => $this->showroom->logo,
+                'logo' => Storage::disk('public')->url($this->showroom->logo) ?? null,
             ];
         } else {
             $department = null;
@@ -37,7 +38,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'avatar' => $this->avatar,
+            'avatar' => Storage::disk('public')->url($this->avatar) ?? null,
             'referral_code' => $this->referral_code,
             'role' => $this->role,
             'joined_at' => $this->joined_at,

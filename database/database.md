@@ -88,12 +88,12 @@
   - `image` (string, nullable) — Hình ảnh mặc định camera
   - `channel_id` (unsignedTinyInteger, default 0, nullable) — Thường = 0
   - `device_model` (string, nullable) — Model camera
-  - `bind_status` (boolean, default false) — 0/1 – bind status
-  - `is_active` (boolean, default false) — 0/1 – active status
-  - `enable` (boolean, default false) — 0/1 – enable status
+  - `bind_status` (boolean, default false) — 0/1 – bind status ~ bind này là bind và account developer chưa bind camera
+  - `is_active` (boolean, default false) — 0/1 – active status ~ trạng thái cho phép truy cập ở mobile
+  - `enable` (boolean, default false) — 0/1 – enable status ~ trạng thái thực tế của camera
   - `description` (string(255), nullable)
   - `showroom_id` (FK, nullable) → `showrooms.id`, nullOnDelete, index
-  - `deleted_at` (soft deletes)
+  - `deleted_at` (soft deletes) 
   - `created_at`, `updated_at`
 
 ### `brands`

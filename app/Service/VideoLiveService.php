@@ -26,6 +26,13 @@ class VideoLiveService
     const PATH_BIND_DEVICE = '/openapi/bindDevice'; // bind thiết bị vào developer account ~ xác nhận thiết bị vào tổ chức / bắt buộc để LIVE
     const PATH_DEVICE_ONLINE = '/openapi/deviceOnline'; // kiểm tra thiết bị có online để truy cập không
     const PATH_BIND_DEVICE_CHANNEL_INFO = '/openapi/bindDeviceChannelInfo'; // lấy thông tin chi tiết thiết bị, có bao nhiêu luồng 
+
+    const PATH_LIVE = '/openapi/bindDeviceLive'; // khởi động live
+    const PATH_LIVE_INFO = '/openapi/getLiveStreamInfo'; // lấy thông tin stream live
+    const PATH_STOP_LIVE = '/openapi/unbindLive'; // dừng live
+
+    const PATH_LIVE_CHECK = '/openapi/getDeviceOnlineStatus'; // kiểm tra live
+    const PATH_LIVE_LIST = '/openapi/liveList'; // danh sách live
     /**
      * Set access token
      * @return void
@@ -98,5 +105,9 @@ class VideoLiveService
 
         LogHelper::error("Không thể lấy Access Token sau 5 lần thử.");
         return null;
+    }
+
+    public function bindDevice($deviceId, $deviceKey) {
+        
     }
 }
