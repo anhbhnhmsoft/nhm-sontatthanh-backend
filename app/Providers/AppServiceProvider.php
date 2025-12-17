@@ -11,6 +11,7 @@ use App\Service\NewsService;
 use App\Service\ProductService;
 use App\Service\ShowroomService;
 use App\Service\VideoLiveService;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerObserve();
+        if (env('APP_ENV') !== 'local' || env('APP_DEBUG')) { // Chỉ áp dụng cho dev/staging/prod
+            URL::forceScheme('https');
+        }
     }
 
     /**
