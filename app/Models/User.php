@@ -31,7 +31,7 @@ class User extends Authenticatable
         'showroom_id',
         'password',
         'email_verified_at',
-        'phone_verified_at',
+        'phone_verified_at',    
         'sale_id',
     ];
 

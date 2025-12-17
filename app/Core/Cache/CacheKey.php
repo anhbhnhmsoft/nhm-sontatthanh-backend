@@ -77,4 +77,15 @@ enum CacheKey: string
      * Lưu lại danh sách news
      */
     case CACHE_NEWS = 'CACHE_NEWS';
+
+    /**
+     * Lưu lại cofig key
+     */
+    case CACHE_CONFIG_KEY = 'CACHE_CONFIG_KEY';
+
+    /**
+     * Lưu lại access token
+     */
+    case CACHE_ACCESS_TOKEN = 'CACHE_ACCESS_TOKEN';
+
 }

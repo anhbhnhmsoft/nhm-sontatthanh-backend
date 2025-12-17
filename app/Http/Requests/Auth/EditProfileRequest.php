@@ -20,6 +20,7 @@ class EditProfileRequest extends FormRequest
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
             'old_password' => 'nullable|string|min:6',
             'new_password' => 'nullable|string|min:6',
+            'email' => 'nullable|email',
         ];
     }
 
@@ -33,6 +34,7 @@ class EditProfileRequest extends FormRequest
             'avatar.max' => 'Ảnh đại diện không được vượt quá 10MB',
             'old_password.min' => 'Mật khẩu cũ phải có ít nhất 6 ký tự',
             'new_password.min' => 'Mật khẩu mới phải có ít nhất 6 ký tự',
+            'email.email' => 'Email không hợp lệ',
         ];
     }
 
