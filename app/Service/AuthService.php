@@ -444,4 +444,32 @@ class AuthService extends BaseService
             return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');
         }
     }
+
+    /**
+     * Quên mật khẩu
+     * @param string $phone
+     * @param string $password
+     * @return ServiceReturn
+     */
+    public function forgotPassword(string $phone, string $password): ServiceReturn
+    {
+        try {
+            
+            $user = $this->userModel->where('phone', $phone)->first();
+            if (!$user) {
+                return ServiceReturn::error('Số điện thoại không tồn tại');
+            }
+
+            $user->password = Hash::make($password);
+            $user->save();
+
+            return ServiceReturn::success($user, 'Cập nhật mật khẩu thành công');
+        } catch (\Throwable $th) {
+            LogHelper::error(
+                'Lỗi xảy ra ở AuthService@forgotPassword :',
+                $th
+            );
+            return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');
+        }
+    }
 }

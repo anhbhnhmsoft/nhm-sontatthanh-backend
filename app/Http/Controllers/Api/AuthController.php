@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
+use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Service\AuthService;
 use Illuminate\Http\JsonResponse;
@@ -154,6 +155,28 @@ class AuthController extends BaseController
             $request->validated('avatar'),
             $request->validated('old_password'),
             $request->validated('new_password'),
+            $request->validated('email'),
+        );
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+            );
+        }
+
+        return $this->sendSuccess(
+            $result->getMessage()
+        );
+    }
+
+    /**
+     * Quên mật khẩu
+     */
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $result = $this->authService->forgotPassword(
+            $request->validated('phone'),
+            $request->validated('password'),
         );
 
         if ($result->isError()) {
