@@ -165,7 +165,10 @@ class AuthController extends BaseController
         }
 
         return $this->sendSuccess(
-            $result->getMessage()
+            data: [
+                'user' => UserResource::make(Auth::user()),
+            ],
+            message: $result->getMessage()
         );
     }
 

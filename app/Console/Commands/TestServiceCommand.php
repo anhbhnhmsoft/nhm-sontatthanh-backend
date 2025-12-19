@@ -26,6 +26,6 @@ class TestServiceCommand extends Command
      */
     public function handle(VideoLiveService $videoLiveService)
     {
-        $videoLiveService->startLive('D29D3BCPCG6A1AF');
+        $videoLiveService->bindDevice('D29D3BCPCG6A1AF', 'L2EB5FB8');
     }
 }
