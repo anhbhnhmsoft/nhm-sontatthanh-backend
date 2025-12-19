@@ -325,11 +325,25 @@ return new class extends Migration
         });
 
         Schema::create('notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('type');
-            $table->morphs('notifiable');
-            $table->text('data');
+            $table->foreignId('user_id')->constrained('users')->nullOnDelete();
+            $table->string('title')->nullable();
+            $table->text('description')->nullable();
+            $table->text('data')->nullable();
             $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('user_devices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('expo_push_token')->unique();
+            $table->string('device_id')->nullable();
+            $table->string('device_type', 20)->nullable();
+            $table->dateTime('last_seen_at')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -361,10 +375,13 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('personal_access_tokens');
+        Schema::dropIfExists('user_devices');   
+        Schema::dropIfExists('notifications');
 
         // Custom Schema - Xóa theo thứ tự phụ thuộc (bảng con trước, bảng cha sau)
 
         // Bảng có khóa ngoại tham chiếu đến users, cameras, products, departments, showrooms, brands, lines
+        Schema::dropIfExists('channels');
         Schema::dropIfExists('news'); // Tham chiếu đến users
         Schema::dropIfExists('banners');
         Schema::dropIfExists('camera_user'); // Tham chiếu đến users và cameras

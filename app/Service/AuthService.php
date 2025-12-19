@@ -171,7 +171,7 @@ class AuthService extends BaseService
             // nếu block
             if ($isBlocked) {
                 return ServiceReturn::error(
-                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . $this->blockTime . ' phút.'
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' .( $this->blockTime / 60 ) . ' phút.'
                 );
             }
             // Lấy OTP đã gửi để kiểm tra
@@ -222,7 +222,7 @@ class AuthService extends BaseService
             // nếu block
             if ($isBlocked) {
                 return ServiceReturn::error(
-                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . $this->blockTime . ' phút.'
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' .( $this->blockTime / 60 ) . ' phút.'
                 );
             }
             // xác định số lần gửi otp
@@ -233,7 +233,7 @@ class AuthService extends BaseService
                     key: CacheKey::CACHE_KEY_OTP_REGISTER_BLOCK,
                     value: true,
                     uniqueKey: $phone,
-                    expire: $this->blockTime * 60, // phút -> giây
+                    expire: $this->blockTime, // phút -> giây
                 );
 
                 return ServiceReturn::error('Đã gửi quá số lần cho phép');
@@ -483,7 +483,7 @@ class AuthService extends BaseService
             // nếu block
             if ($isBlocked) {
                 return ServiceReturn::error(
-                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . $this->blockTime . ' phút.'
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' .( $this->blockTime / 60 ) . ' phút.'
                 );
             }
             // Lấy OTP đã gửi để kiểm tra
@@ -534,7 +534,7 @@ class AuthService extends BaseService
             // nếu block
             if ($isBlocked) {
                 return ServiceReturn::error(
-                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . $this->blockTime . ' phút.'
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' .($this->blockTime / 60). ' phút.'
                 );
             }
             // xác định số lần gửi otp
@@ -545,7 +545,7 @@ class AuthService extends BaseService
                     key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_BLOCK,
                     value: true,
                     uniqueKey: $phone,
-                    expire: $this->blockTime * 60, // phút -> giây
+                    expire: $this->blockTime , // phút -> giây
                 );
 
                 return ServiceReturn::error('Đã gửi quá số lần cho phép');
