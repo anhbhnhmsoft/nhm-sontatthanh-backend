@@ -54,12 +54,6 @@ class CameraForm
                                     ]),
                                 TextInput::make('channel_id')
                                     ->label('Số kênh ~ số mắt của thiết bị'),
-                                TextInput::make('device_model')
-                                    ->label('Model')
-                                    ->maxLength(255)
-                                    ->validationMessages([
-                                        'maxLength' => 'Model không được vượt quá 255 ký tự',
-                                    ]),
                                 FileUpload::make('image')
                                     ->disk('public')
                                     ->directory(DirectFile::CAMERAS->value)

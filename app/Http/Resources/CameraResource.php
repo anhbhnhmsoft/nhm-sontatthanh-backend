@@ -23,7 +23,6 @@ class CameraResource extends JsonResource
             'is_active' => $this->is_active,
             'device_id' => $this->device_id,
             'channel_id' => $this->channel_id,
-            'device_model' => $this->device_model,
             'enable' => $this->enable,
         ];
     }

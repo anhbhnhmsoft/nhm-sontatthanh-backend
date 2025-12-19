@@ -18,7 +18,6 @@ class Camera extends Model
         'is_active',
         'device_id',
         'channel_id',
-        'device_model',
         'bind_status',
         'enable',
         'security_code',
@@ -38,5 +37,10 @@ class Camera extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'camera_user')->withTimestamps();
+    }
+
+    public function channels()
+    {
+        return $this->hasMany(Channel::class);
     }
 }

@@ -413,8 +413,14 @@ class AuthService extends BaseService
 
     /**
      * Cập nhật thông tin user
+     * @param ?string $name
+     * @param ?UploadedFile $avatar
+     * @param ?string $oldPassword
+     * @param ?string $newPassword
+     * @param ?string $email
+     * @return ServiceReturn
      */
-    public function editProfile(?string $name, ?UploadedFile $avatar, ?string $oldPassword, ?string $newPassword): ServiceReturn
+    public function editProfile(?string $name, ?UploadedFile $avatar, ?string $oldPassword, ?string $newPassword, ?string $email): ServiceReturn
     {
         try {
             /**
@@ -432,6 +438,9 @@ class AuthService extends BaseService
             }
             if ($avatar && $avatar->isValid()) {
                 $user->avatar = $avatar->store(DirectFile::AVATARS->value, 'public');
+            }
+            if ($email && isset($email)) {
+                $user->email = $email;
             }
             $user->save();
 

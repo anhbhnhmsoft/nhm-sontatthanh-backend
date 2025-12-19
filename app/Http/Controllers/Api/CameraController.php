@@ -15,24 +15,6 @@ class CameraController extends BaseController
     {
         $this->cameraService = $cameraService;
     }
-
-    /**
-     * Lấy danh sách camera mà user có quyền xem
-     */
-    public function list(): JsonResponse
-    {
-        $result = $this->cameraService->getUserCameras();
-
-        if ($result->isError()) {
-            return $this->sendError($result->getMessage());
-        }
-
-        return $this->sendSuccess(
-            $result->getData(),
-            $result->getMessage()
-        );
-    }
-
     /**
      * Khởi động live stream cho camera
      */
@@ -56,26 +38,4 @@ class CameraController extends BaseController
         );
     }
 
-    /**
-     * Dừng live stream
-     */
-    public function stopLive(Request $request): JsonResponse
-    {
-        $request->validate([
-            'live_token' => 'required|string',
-        ]);
-
-        $result = $this->cameraService->stopCameraLive(
-            $request->input('live_token')
-        );
-
-        if ($result->isError()) {
-            return $this->sendError($result->getMessage());
-        }
-
-        return $this->sendSuccess(
-            $result->getData(),
-            $result->getMessage()
-        );
-    }
 }

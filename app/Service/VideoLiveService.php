@@ -7,6 +7,7 @@ use App\Core\Cache\Caching;
 use App\Core\LogHelper;
 use App\Core\Service\ServiceReturn;
 use App\Enums\ConfigKey;
+use App\Enums\StatusChannel;
 use App\Service\ConfigService;
 use App\Models\Camera;
 use Illuminate\Support\Facades\Http;
@@ -29,10 +30,9 @@ class VideoLiveService
     const PATH_DEVICE_ONLINE = '/openapi/deviceOnline'; // kiểm tra thiết bị có online để truy cập không
     const PATH_BIND_DEVICE_CHANNEL_INFO = '/openapi/queryOpenDeviceChannelInfo'; // lấy thông tin chi tiết thiết bị, có bao nhiêu luồng 
 
-    const PATH_LIVE = '/openapi/bindDeviceLive'; // khởi động live
+    const PATH_START_LIVE = '/openapi/bindDeviceLive'; // khởi động live
 
-    const PATH_LIVE_CHECK = '/openapi/getDeviceOnlineStatus'; // kiểm tra live
-    const PATH_LIVE_LIST = '/openapi/liveList'; // danh sách live
+    const PATH_LIVE_CHECK = '/openapi/getLiveStreamInfo'; // kiểm tra live
 
     // ------------ PRIVATE FUNCTION ------------
     /**
@@ -139,13 +139,14 @@ class VideoLiveService
             $this->setAccessToken();
             // Nếu chưa có, gọi hàm để fetch từ API và lưu vào cache
 
-            // đợi 0.5 giây
+            // đợi 5 giây
             usleep(5000000);
         }
 
         LogHelper::error("Không thể lấy Access Token sau 5 lần thử.");
         return null;
     }
+
     // ------------ PUBLIC FUNCTION ------------
     /**
      * Bind thiết bị vào developer account
@@ -217,6 +218,7 @@ class VideoLiveService
 
     /**
      * Kiểm tra trạng thái thiết bị online
+     * https://open.imoulife.com/book/http/device/manage/query/deviceOnline.html
      * @param string $deviceId
      * @return ServiceReturn
      * `
@@ -286,6 +288,7 @@ class VideoLiveService
 
     /**
      * Lấy thông tin kênh video của thiết bị
+     * https://open.imoulife.com/book/http/device/manage/query/queryOpenDeviceChannelInfo.html
      * @param string $deviceId
      * @return ServiceReturn
      */
@@ -331,6 +334,20 @@ class VideoLiveService
 
             $data = $response->json();
             if ($response->successful() && isset($data['result']['code']) && $data['result']['code'] === '0') {
+
+                $channels = $data['result']['devices'][0]['channels'];
+                foreach ($channels as $channel) {
+                    $camera->channels()->create([
+                        'name' => $channel['name'],
+                        'status' => $channel['status'] == 'online' ? StatusChannel::ONLINE->value : StatusChannel::OFFLINE->value,
+                        'position' => $channel['channelId'],
+                    ]);
+                }
+
+                $camera->update([
+                    'channel_id' => count($channels),
+                ]);
+
                 LogHelper::debug("Check thông tin kênh device {$deviceId} thành công");
                 return ServiceReturn::success([
                     'success' => true,
@@ -349,12 +366,34 @@ class VideoLiveService
 
     /**
      * Khởi động live 
+     * https://open.imoulife.com/book/http/device/live/bindDeviceLive.html
      * @param string $deviceId
      * @return ServiceReturn
      */
-
     public function startLive(string $deviceId): ServiceReturn
     {
+        if(Caching::hasCache(CacheKey::CACHE_LIVE_STREAM, $deviceId)) {
+            return ServiceReturn::success([
+                'success' => true,
+                'message' => 'Live stream đang hoạt động',
+                'data' => Caching::getCache(CacheKey::CACHE_LIVE_STREAM, $deviceId)
+            ]);
+        }
+
+        $device = $this->cameraModel->where('device_id', $deviceId)->first();
+        if (!$device) {
+            return ServiceReturn::error(
+                'Thiết bị không tồn tại'
+            );
+        }
+
+        $chanel = $device->channels()->where('status', StatusChannel::ONLINE->value)->first();
+        if (!$chanel) {
+            return ServiceReturn::error(
+                'Không có kênh nào đang hoạt động'
+            );
+        }
+
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
             return ServiceReturn::error(
@@ -376,7 +415,7 @@ class VideoLiveService
         try {
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post(self::HOST . self::PATH_LIVE, [
+            ])->post(self::HOST . self::PATH_START_LIVE, [
                 'system' => [
                     'ver' => '1.0',
                     'time' => $time,
@@ -387,15 +426,28 @@ class VideoLiveService
                 'id' => uniqid('req_'),
                 'params' => [
                     'streamId' => 1,
-                    'channelId' => '0',
+                    'channelId' => $chanel->position,
                     'deviceId' => $deviceId,
                     'token' => $accessToken,
                 ],
             ]);
 
             $data = $response->json();
-            dd($data);
             if ($response->successful() && isset($data['result']['code']) && $data['result']['code'] === '0') {
+
+                $data = $data['result']['data'];
+                $stream = $data['streams'];
+
+                $broadcast = [
+                    'coverUrl'   =>  $stream['coverUrl'],
+                    'streamId'   => $stream['streamId'],
+                    'hls'        => $stream['hls'],
+                    'liveToken'  => $data['liveToken'],
+                    'channelId'  => $data['channelId'],
+                    'liveStatus' => $data['liveStatus'],
+                ];
+
+                Caching::setCache(CacheKey::CACHE_LIVE_STREAM, $broadcast, $deviceId, 60 * 60);
                 LogHelper::debug("Khởi động live device {$deviceId} thành công");
                 return ServiceReturn::success(
                     'Khởi động live device thành công',
@@ -413,52 +465,5 @@ class VideoLiveService
                 'Lỗi kết nối: ' . $th->getMessage()
             );
         }
-    }
-
-
-    /**
-     * Kiểm tra và cập nhật trạng thái camera
-     * @param Camera $camera
-     * @return bool
-     */
-    public function updateCameraStatus(Camera $camera): bool
-    {
-        // Kiểm tra device online
-        $onlineStatus = $this->checkDeviceOnline($camera->device_id);
-
-        if (!$onlineStatus['success']) {
-            LogHelper::error("Không thể kiểm tra trạng thái camera {$camera->id}: {$onlineStatus['message']}");
-            return false;
-        }
-
-        // Cập nhật trạng thái enable
-        $camera->enable = $onlineStatus['online'];
-
-        // Nếu chưa bind, thử bind
-        if (!$camera->bind_status && $camera->security_code) {
-            $bindResult = $this->bindDevice($camera->device_id, $camera->security_code);
-            if ($bindResult['success']) {
-                $camera->bind_status = true;
-            }
-        }
-
-        // Lấy thông tin channel nếu đã bind
-        if ($camera->bind_status) {
-            $channelInfo = $this->getDeviceChannelInfo($camera->device_id);
-            if ($channelInfo['success'] && isset($channelInfo['data']['channels'])) {
-                // Cập nhật số channel nếu có
-                $channels = $channelInfo['data']['channels'];
-                if (is_array($channels) && count($channels) > 0) {
-                    $camera->channel_id = count($channels) - 1; // 0-indexed
-                }
-
-                // Cập nhật model nếu có
-                if (isset($channelInfo['data']['model'])) {
-                    $camera->device_model = $channelInfo['data']['model'];
-                }
-            }
-        }
-
-        return $camera->save();
     }
 }

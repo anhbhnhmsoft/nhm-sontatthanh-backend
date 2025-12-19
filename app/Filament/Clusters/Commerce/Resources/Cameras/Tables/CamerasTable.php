@@ -52,9 +52,7 @@ class CamerasTable
                 TextColumn::make('device_id')
                     ->label('Thiết bị')
                     ->searchable(),
-                TextColumn::make('device_model')
-                    ->label('Model')
-                    ->searchable(),
+
                 IconColumn::make('bind_status')
                     ->label('Trạng thái kết nối')
                     ->icon(fn($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')

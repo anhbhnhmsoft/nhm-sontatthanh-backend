@@ -49,9 +49,7 @@ Route::prefix('news')->group(function () {
 });
 
 Route::prefix('camera')->middleware('auth:sanctum')->group(function () {
-    Route::get('list', [CameraController::class, 'list']);
     Route::post('start-live', [CameraController::class, 'startLive']);
-    Route::post('stop-live', [CameraController::class, 'stopLive']);
 });
 
 Route::prefix('file')->group(function () {

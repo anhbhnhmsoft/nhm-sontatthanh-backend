@@ -103,7 +103,6 @@ return new class extends Migration
             $table->string('device_id')->nullable()->comment('SN – bắt buộc')->unique();
             $table->unsignedTinyInteger('channel_id')->default(0)->nullable()->comment('số luồng camera ~ số luồng stream được ~ số  mắt của thiết bị: 0 ~ 1 mắt và tăng dần 1 ~ 2 mắt 2 luồng ');
             $table->string('image')->nullable()->comment('Hình ảnh mặc định camera');
-            $table->string('device_model')->nullable()->comment('Model camera');
             $table->boolean('bind_status')->default(false)->comment('0/1 – bind hay chưa - bind này là bind và account developer chưa ');
             $table->boolean('is_active')->default(false)->comment('0/1 – active hay chưa - active để dừng trả ra dữ liệu cho phé mobile truy cập');
             $table->boolean('enable')->default(false)->comment('0/1 – enable hay chưa ~ enable là trạng thái thực tế của camera, còn sử dụng được hay không');
@@ -114,7 +113,19 @@ return new class extends Migration
             $table->timestamps();
         });
 
-
+        /**
+         * Bảng channels
+         * note: bảng kênh video
+         */
+        Schema::create('channels', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Kênh video của camera');
+            $table->foreignId('camera_id')->constrained('cameras')->cascadeOnDelete();
+            $table->tinyInteger('status')->comment('Trạng thái');
+            $table->string('name')->comment('Tên kênh');
+            $table->softDeletes();
+            $table->timestamps();
+        });
         /**
          * Bảng brands 
          * note: bảng thương hiệu sản phẩm

@@ -13,13 +13,17 @@ return new class extends Migration
     {
         Schema::create('channels', function (Blueprint $table) {
             $table->id();
-            $table->string('device_id');
-            $table->string('channel_id');
-            $table->string('device_model');
-            $table->boolean('bind_status');
-            $table->boolean('enable');
-            $table->string('security_code');
+            $table->comment('Kênh video của camera');
+            $table->foreignId('camera_id')->constrained('cameras')->cascadeOnDelete();
+            $table->tinyInteger('status')->comment('Trạng thái');
+            $table->string('name')->comment('Tên kênh');
+            $table->tinyInteger('position')->comment('Vị trí kênh');
+            $table->softDeletes();
             $table->timestamps();
+        });
+
+        Schema::table('cameras', function (Blueprint $table) {
+            $table->dropColumn('device_model');
         });
     }
 
@@ -28,6 +32,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('hannels');
+        Schema::dropIfExists('channels');
+        Schema::table('cameras', function (Blueprint $table) {
+            $table->string('device_model')->nullable()->comment('Model camera');
+        });
     }
 };
