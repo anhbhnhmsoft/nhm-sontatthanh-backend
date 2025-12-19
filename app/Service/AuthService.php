@@ -451,10 +451,257 @@ class AuthService extends BaseService
      * @param string $password
      * @return ServiceReturn
      */
-    public function forgotPassword(string $phone, string $password): ServiceReturn
+
+    /**
+     * Gửi OTP quên mật khẩu
+     * @param string $phone
+     * @return ServiceReturn
+     */
+    public function sendForgotPasswordOtp(string $phone): ServiceReturn
     {
         try {
-            
+            // CHECK: Phone đã tồn tại chưa?
+            $user = $this->userModel->where('phone', $phone)->first();
+            if (!$user) {
+                return ServiceReturn::error('Số điện thoại chưa được đăng ký');
+            }
+
+            // xác định trạng thái block gửi otp
+            $isBlocked = Caching::getCache(
+                key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_BLOCK,
+                uniqueKey: $phone
+            );
+            // nếu block
+            if ($isBlocked) {
+                return ServiceReturn::error(
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . $this->blockTime . ' phút.'
+                );
+            }
+            // Lấy OTP đã gửi để kiểm tra
+            $subotp = Caching::getCache(
+                key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD,
+                uniqueKey: $phone
+            );
+            // nếu đã gửi otp
+            if ($subotp) {
+                return ServiceReturn::error('OTP đã được gửi, vui lòng kiểm tra lại');
+            }
+
+            // $otp = rand(100000, 999999);
+            $otp = 888888;
+            // lưu otp vào cache
+            Caching::setCache(
+                key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD,
+                value: [
+                    $otp,
+                    request()->ip()
+                ],
+                uniqueKey: $phone,
+                expire: $this->otpTtl,
+            );
+            return ServiceReturn::success(null, 'Gửi OTP thành công');
+        } catch (\Throwable $th) {
+            LogHelper::error(
+                'Lỗi xảy ra ở AuthService@sendForgotPasswordOtp :',
+                $th
+            );
+            return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');
+        }
+    }
+
+    /**
+     * Gửi lại OTP quên mật khẩu
+     * @param string $phone
+     * @return ServiceReturn
+     */
+    public function resendForgotPasswordOtp(string $phone): ServiceReturn
+    {
+        try {
+            // xác định trạng thái block gửi otp
+            $isBlocked = Caching::getCache(
+                key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_BLOCK,
+                uniqueKey: $phone
+            );
+            // nếu block
+            if ($isBlocked) {
+                return ServiceReturn::error(
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . $this->blockTime . ' phút.'
+                );
+            }
+            // xác định số lần gửi otp
+            $timesSend = $this->countCacheForgotPasswordSendOtp($phone);
+            // nếu số lần gửi otp vượt quá số lần cho phép
+            if ($timesSend > $this->maxResendOtp) {
+                Caching::setCache(
+                    key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_BLOCK,
+                    value: true,
+                    uniqueKey: $phone,
+                    expire: $this->blockTime * 60, // phút -> giây
+                );
+
+                return ServiceReturn::error('Đã gửi quá số lần cho phép');
+            }
+
+            // Xóa OTP cũ để gửi cái mới
+            Caching::deleteCache(
+                key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD,
+                uniqueKey: $phone
+            );
+
+            return $this->sendForgotPasswordOtp($phone);
+        } catch (\Throwable $th) {
+            LogHelper::error(
+                'Lỗi xảy ra ở AuthService@resendForgotPasswordOtp :',
+                $th
+            );
+            return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');
+        }
+    }
+
+    /**
+     * Tạo cache đếm số lần gửi otp quên mật khẩu
+     * @param string $phone
+     * @throws ServiceException
+     */
+    protected function countCacheForgotPasswordSendOtp(string $phone): int
+    {
+        // xác định trạng thái cache số lần gửi otp
+        $hasCacheCount = Caching::hasCache(
+            key: CacheKey::CACHE_KEY_RESEND_FORGOT_PASSWORD_OTP,
+            uniqueKey: $phone,
+        );
+        if ($hasCacheCount) {
+            // tăng số lần gửi otp
+            $count = Caching::incrementCache(
+                key: CacheKey::CACHE_KEY_RESEND_FORGOT_PASSWORD_OTP,
+                uniqueKey: $phone,
+            );
+        } else {
+            // tạo cache số lần gửi otp
+            $count = Caching::setCache(
+                key: CacheKey::CACHE_KEY_RESEND_FORGOT_PASSWORD_OTP,
+                value: 1,
+                uniqueKey: $phone,
+                expire: $this->registerTimeout,
+            );
+        }
+        return $count;
+    }
+
+    /**
+     * Tạo cache đếm số lần xác thực quên mật khẩu bằng otp
+     * @param string $phone
+     * @throws ServiceException
+     */
+    protected function countCacheVerifyOtpForgotPassword(string $phone): int
+    {
+        // xác định trạng thái cache số  nhập opt
+        $hasCacheCount = Caching::hasCache(
+            key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_ATTEMPTS,
+            uniqueKey: $phone,
+        );
+        if ($hasCacheCount) {
+            // tăng số lần nhập opt
+            $count = Caching::incrementCache(
+                key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_ATTEMPTS,
+                uniqueKey: $phone,
+            );
+        } else {
+            // tạo cache số lần nhập opt
+            $count = Caching::setCache(
+                key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_ATTEMPTS,
+                value: 1,
+                uniqueKey: $phone,
+                expire: $this->registerTimeout,
+            );
+        }
+        return $count;
+    }
+
+    /**
+     * Xác thực OTP quên mật khẩu
+     * @param string $phone
+     * @param string $otp
+     * @return ServiceReturn
+     */
+    public function verifyForgotPasswordOtp(string $phone, string $otp): ServiceReturn
+    {
+        try {
+            $count = $this->countCacheVerifyOtpForgotPassword($phone);
+            if ($count > $this->maxAttempts) {
+                return ServiceReturn::error('Đã thử quá số lần cho phép');
+            }
+
+            // lấy OTP đã gửi
+            $cache = Caching::getCache(
+                key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD,
+                uniqueKey: $phone,
+            );
+
+            if (!$cache) {
+                return ServiceReturn::error('Mã OTP đã hết hạn hoặc không tồn tại');
+            }
+
+            $otpSended = $cache[0];
+            $ipSended = $cache[1];
+
+            // Kiểm tra OTP và IP khớp
+            if ($otpSended != $otp) {
+                return ServiceReturn::error('Mã OTP không chính xác');
+            }
+
+            if ($ipSended != request()->ip()) {
+                return ServiceReturn::error('Phiên làm việc không hợp lệ (IP)');
+            }
+
+            // Tạo token reset password
+            $resetToken = Str::random(60);
+            Caching::setCache(
+                key: CacheKey::CACHE_KEY_FORGOT_PASSWORD_TOKEN,
+                value: $resetToken,
+                uniqueKey: $phone,
+                expire: 10 * 60 // 10 phút
+            );
+
+            // Xóa cache OTP
+            Caching::deleteCache(key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD, uniqueKey: $phone);
+            Caching::deleteCache(key: CacheKey::CACHE_KEY_RESEND_FORGOT_PASSWORD_OTP, uniqueKey: $phone);
+            Caching::deleteCache(key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_ATTEMPTS, uniqueKey: $phone);
+
+            return ServiceReturn::success([
+                'reset_token' => $resetToken
+            ], 'Xác thực thành công');
+        } catch (\Throwable $th) {
+            LogHelper::error(
+                'Lỗi xảy ra ở AuthService@verifyForgotPasswordOtp :',
+                $th
+            );
+            return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');
+        }
+    }
+
+    /**
+     * Quên mật khẩu (Reset Password)
+     * @param string $phone
+     * @param string $password
+     * @param string|null $token
+     * @return ServiceReturn
+     */
+    public function forgotPassword(string $phone, string $password, ?string $token = null): ServiceReturn
+    {
+        try {
+            // Check token
+            $cachedToken = Caching::getCache(
+                key: CacheKey::CACHE_KEY_FORGOT_PASSWORD_TOKEN,
+                uniqueKey: $phone
+            );
+
+            if (!$token || !$cachedToken || $token !== $cachedToken) {
+                // Nếu không có token truyền vào, thử kiểm tra xem có phải gọi từ flow cũ không hoặc trả lỗi
+                // Ở đây strict: Phải có token hợp lệ
+                return ServiceReturn::error('Phiên thay đổi mật khẩu không hợp lệ hoặc đã hết hạn');
+            }
+
             $user = $this->userModel->where('phone', $phone)->first();
             if (!$user) {
                 return ServiceReturn::error('Số điện thoại không tồn tại');
@@ -462,6 +709,9 @@ class AuthService extends BaseService
 
             $user->password = Hash::make($password);
             $user->save();
+
+            // Xóa token sau khi dùng
+            Caching::deleteCache(key: CacheKey::CACHE_KEY_FORGOT_PASSWORD_TOKEN, uniqueKey: $phone);
 
             return ServiceReturn::success($user, 'Cập nhật mật khẩu thành công');
         } catch (\Throwable $th) {

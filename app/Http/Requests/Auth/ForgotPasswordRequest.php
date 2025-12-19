@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -21,6 +21,10 @@ class ForgotPasswordRequest extends FormRequest
                 'required',
                 'string',
                 'regex:/^(0|\+84)[3|5|7|8|9][0-9]{8}$/',
+            ],
+            'token' => [
+                'required',
+                'string',
             ],
 
             'password' => [
@@ -45,6 +49,7 @@ class ForgotPasswordRequest extends FormRequest
         return [
             'phone.required' => 'Vui lòng nhập số điện thoại',
             'phone.regex' => 'Số điện thoại không đúng định dạng',
+            'token.required' => 'Mã xác thực không hợp lệ',
             'password.required' => 'Vui lòng nhập mật khẩu',
             'password.min' => 'Mật khẩu phải có ít nhất :min ký tự',
             'password.max' => 'Mật khẩu không được vượt quá :max ký tự',

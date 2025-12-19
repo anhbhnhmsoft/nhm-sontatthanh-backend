@@ -8,7 +8,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
-use App\Http\Requests\ForgotPasswordRequest;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Service\AuthService;
 use Illuminate\Http\JsonResponse;
@@ -172,11 +172,60 @@ class AuthController extends BaseController
     /**
      * Quên mật khẩu
      */
+    /**
+     * Gửi OTP quên mật khẩu
+     */
+    public function sendForgotPasswordOtp(ResendOtpRequest $request): JsonResponse
+    {
+        $result = $this->authService->sendForgotPasswordOtp(
+            $request->validated('phone')
+        );
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+            );
+        }
+
+        return $this->sendSuccess(
+            $result->getMessage()
+        );
+    }
+
+    /**
+     * Xác thực OTP quên mật khẩu
+     */
+    public function verifyForgotPasswordOtp(VerifyOtpRequest $request): JsonResponse
+    {
+        $result = $this->authService->verifyForgotPasswordOtp(
+            $request->validated('phone'),
+            $request->validated('otp')
+        );
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+            );
+        }
+
+        $token = $result->getData()['reset_token'];
+        return $this->sendSuccess(
+            [
+                'reset_token' => $token,
+            ],
+            $result->getMessage()
+        );
+    }
+
+    /**
+     * Quên mật khẩu
+     */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
         $result = $this->authService->forgotPassword(
             $request->validated('phone'),
             $request->validated('password'),
+            $request->validated('token'),
         );
 
         if ($result->isError()) {

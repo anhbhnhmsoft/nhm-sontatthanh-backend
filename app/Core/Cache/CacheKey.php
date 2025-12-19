@@ -28,6 +28,31 @@ enum CacheKey: string
      * Lưu trạng thái block đăng ký otp
      */
     case CACHE_KEY_OTP_REGISTER_BLOCK = 'CACHE_KEY_OTP_REGISTER_BLOCK';
+
+    /**
+     * Lưu mã OTP quên mật khẩu.
+     */
+    case CACHE_KEY_OTP_FORGOT_PASSWORD = 'CACHE_KEY_OTP_FORGOT_PASSWORD';
+
+    /**
+     * Lưu số lần nhập sai OTP quên mật khẩu.
+     */
+    case CACHE_KEY_OTP_FORGOT_PASSWORD_ATTEMPTS = 'CACHE_KEY_OTP_FORGOT_PASSWORD_ATTEMPTS';
+
+    /**
+     * Lưu số lần gửi lại OTP quên mật khẩu.
+     */
+    case CACHE_KEY_RESEND_FORGOT_PASSWORD_OTP = 'CACHE_KEY_RESEND_FORGOT_PASSWORD_OTP';
+
+    /**
+     * Lưu trạng thái block gửi OTP quên mật khẩu.
+     */
+    case CACHE_KEY_OTP_FORGOT_PASSWORD_BLOCK = 'CACHE_KEY_OTP_FORGOT_PASSWORD_BLOCK';
+
+    /**
+     * Lưu token reset password sau khi verify OTP thành công.
+     */
+    case CACHE_KEY_FORGOT_PASSWORD_TOKEN = 'CACHE_KEY_FORGOT_PASSWORD_TOKEN';
     /**
      * Lưu cấu hình hệ thống.
      */
