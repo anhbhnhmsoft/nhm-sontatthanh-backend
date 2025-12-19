@@ -88,4 +88,23 @@ enum CacheKey: string
      */
     case CACHE_ACCESS_TOKEN = 'CACHE_ACCESS_TOKEN';
 
+    /**
+     * Cache device online status
+     */
+    case CACHE_DEVICE_ONLINE = 'CACHE_DEVICE_ONLINE';
+
+    /**
+     * Cache device channel info
+     */
+    case CACHE_DEVICE_CHANNEL_INFO = 'CACHE_DEVICE_CHANNEL_INFO';
+
+    /**
+     * Cache live stream info
+     */
+    case CACHE_LIVE_STREAM_INFO = 'CACHE_LIVE_STREAM_INFO';
+
+    /**
+     * Cache live list
+     */
+    case CACHE_LIVE_LIST = 'CACHE_LIVE_LIST';
 }

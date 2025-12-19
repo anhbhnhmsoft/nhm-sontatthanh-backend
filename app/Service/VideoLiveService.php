@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Core\Cache\CacheKey;
 use App\Core\Cache\Caching;
 use App\Core\LogHelper;
+use App\Core\Service\ServiceReturn;
 use App\Enums\ConfigKey;
 use App\Service\ConfigService;
 use App\Models\Camera;
@@ -18,35 +19,41 @@ class VideoLiveService
         protected ConfigService $configService,
     ) {}
 
-    const TIME_CACHE = 60 * 60 * 24; // 1 ngày, accesssToken có thời lượng 3 ngày nhưng sét 1 ngày tránh lỗi
+    const TIME_CACHE = 60 * 60 * 24; // 1 ngàgetLiveStreamInfoy, accesssToken có thời lượng 3 ngày nhưng sét 1 ngày tránh lỗi
 
     const HOST = 'https://openapi-sg.easy4ip.com';
 
     const PATH_ACCESS_TOKEN = '/openapi/accessToken'; // lấy access token
     const PATH_BIND_DEVICE = '/openapi/bindDevice'; // bind thiết bị vào developer account ~ xác nhận thiết bị vào tổ chức / bắt buộc để LIVE
     const PATH_DEVICE_ONLINE = '/openapi/deviceOnline'; // kiểm tra thiết bị có online để truy cập không
-    const PATH_BIND_DEVICE_CHANNEL_INFO = '/openapi/bindDeviceChannelInfo'; // lấy thông tin chi tiết thiết bị, có bao nhiêu luồng 
+    const PATH_BIND_DEVICE_CHANNEL_INFO = '/openapi/queryOpenDeviceChannelInfo'; // lấy thông tin chi tiết thiết bị, có bao nhiêu luồng 
 
     const PATH_LIVE = '/openapi/bindDeviceLive'; // khởi động live
-    const PATH_LIVE_INFO = '/openapi/getLiveStreamInfo'; // lấy thông tin stream live
-    const PATH_STOP_LIVE = '/openapi/unbindLive'; // dừng live
+    const PATH_LIVE_INFO = '/openapi/'; // lấy thông tin stream live
+    const PATH_STOP_LIVE = '/openapi/unbindDeviceLive'; // dừng live
 
     const PATH_LIVE_CHECK = '/openapi/getDeviceOnlineStatus'; // kiểm tra live
     const PATH_LIVE_LIST = '/openapi/liveList'; // danh sách live
-    /**
-     * Set access token
-     * @return void
-     */
-    public function setAccessToken(): void
+
+    protected function getSign(): array
     {
+
         $config = $this->configService->getConfigByKey(ConfigKey::APP_ID);
         if ($config->isError()) {
-            return;
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy app id',
+                'data' => null
+            ];
         };
         $appId = $config->getData()['config_value'];
         $config = $this->configService->getConfigByKey(ConfigKey::APP_SECRET);
         if ($config->isError()) {
-            return;
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy app secret',
+                'data' => null
+            ];
         };
         $appKey = $config->getData()['config_value'];
 
@@ -56,6 +63,35 @@ class VideoLiveService
 
         $originSign = "time:{$time},nonce:{$nonce},appSecret:{$appKey}";
         $sign = md5($originSign);
+
+        return [
+            'success' => true,
+            'message' => 'Lấy sign thành công',
+            'data' => [
+                'time' => $time,
+                'nonce' => $nonce,
+                'sign' => $sign,
+                'appId' => $appId,
+            ]
+        ];
+    }
+
+
+    /**
+     * Set access token
+     * @return void
+     */
+    public function setAccessToken(): void
+    {
+        $sign = $this->getSign();
+        if (!$sign['success']) {
+            return;
+        }
+
+        $time = $sign['data']['time'];
+        $nonce = $sign['data']['nonce'];
+        $sign = $sign['data']['sign'];
+        $appId = $sign['data']['appId'];
 
         try {
             $response = Http::withHeaders([
@@ -96,18 +132,356 @@ class VideoLiveService
                 return $accessToken;
             }
 
-            // Nếu chưa có, gọi hàm để fetch từ API và lưu vào cache
             $this->setAccessToken();
+            // Nếu chưa có, gọi hàm để fetch từ API và lưu vào cache
 
             // đợi 0.5 giây
-            usleep(500000);
+            usleep(5000000);
         }
 
         LogHelper::error("Không thể lấy Access Token sau 5 lần thử.");
         return null;
     }
 
-    public function bindDevice($deviceId, $deviceKey) {
+    /**
+     * Bind thiết bị vào developer account
+     * Link: https://open.imoulife.com/book/http/device/manage/bind/bindDevice.html
+     * @param string $deviceId
+     * @param string $code  Safety code / Password của thiết bị
+     * @return array{success: bool, message: string, data: array|null}
+     */
+    public function bindDevice(string $deviceId, string $code): array
+    {
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy access token',
+                'data' => null
+            ];
+        }
+
+        $signature = $this->getSign();
+        if (!$signature['success']) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy signature',
+                'data' => null
+            ];
+        }
         
+        $time = $signature['data']['time'];
+        $nonce = $signature['data']['nonce'];
+        $sign = $signature['data']['sign'];
+        $appId = $signature['data']['appId'];
+
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post(self::HOST . self::PATH_BIND_DEVICE, [
+                'system' => [
+                    'ver' => '1.0',
+                    'time' => $time,
+                    'sign' => $sign,
+                    'nonce' => $nonce,
+                    'appId' => $appId,
+                ],
+                'id' => uniqid('req_'),
+                'params' => [
+                    'deviceId' => $deviceId,
+                    'code' => $code,
+                    'token' => $accessToken,
+                ],
+            ]);
+
+            $data = $response->json();
+            if ($response->successful() && isset($data['result']['code']) && $data['result']['code'] === '0') {
+                LogHelper::debug("Bind device {$deviceId} thành công");
+                return [
+                    'success' => true,
+                    'message' => 'Bind thiết bị thành công',
+                    'data' => $data['result']['data'] ?? []
+                ];
+            }
+
+            LogHelper::error("Bind device {$deviceId} thất bại: " . json_encode($data));
+            return [
+                'success' => false,
+                'message' => $data['result']['msg'] ?? 'Bind thiết bị thất bại',
+                'data' => null
+            ];
+        } catch (\Throwable $th) {
+            LogHelper::error("Bind device {$deviceId} exception: " . $th->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Lỗi kết nối: ' . $th->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Kiểm tra trạng thái thiết bị online
+     * @param string $deviceId
+     * @return array{success: bool, message: string, data: array|null}
+     */
+    public function checkDeviceOnline(string $deviceId): array
+    {
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy access token',
+                'data' => null
+            ];
+        }
+
+        $signature = $this->getSign();
+        if (!$signature['success']) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy signature',
+                'data' => null
+            ];
+        }
+
+        $time = $signature['data']['time'];
+        $nonce = $signature['data']['nonce'];
+        $sign = $signature['data']['sign'];
+        $appId = $signature['data']['appId'];
+
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post(self::HOST . self::PATH_DEVICE_ONLINE, [
+                'system' => [
+                    'ver' => '1.0',
+                    'time' => $time,
+                    'sign' => $sign,
+                    'nonce' => $nonce,
+                    'appId' => $appId,
+                ],
+                'id' => uniqid('req_'),
+                'params' => [
+                    'deviceId' => $deviceId,
+                    'token' => $accessToken,
+                ],
+            ]);
+
+            $data = $response->json();
+
+            if ($response->successful() && isset($data['result']['code']) && $data['result']['code'] === '0') {
+                LogHelper::debug("Check device {$deviceId} online thành công");
+                return [
+                    'success' => true,
+                    'message' => 'Check device online thành công',
+                    'data' => $data['result']['data'] ?? []
+                ];
+            }
+
+            LogHelper::error("Check device {$deviceId} online thất bại: " . json_encode($data));
+            return [
+                'success' => false,
+                'message' => $data['result']['msg'] ?? 'Check device online thất bại',
+                'data' => null
+            ];
+        } catch (\Throwable $th) {
+            LogHelper::error("Check device {$deviceId} online exception: " . $th->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Lỗi kết nối: ' . $th->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Lấy thông tin kênh video của thiết bị
+     * @param string $deviceId
+     * @return array{success: bool, message: string, data: array|null}
+     */
+    public function getDeviceChannelInfo(string $deviceId): array
+    {
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy access token',
+                'data' => null
+            ];
+        }
+
+        $signature = $this->getSign();
+        if (!$signature['success']) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy signature',
+                'data' => null
+            ];
+        }
+
+        $time = $signature['data']['time'];
+        $nonce = $signature['data']['nonce'];
+        $sign = $signature['data']['sign'];
+        $appId = $signature['data']['appId'];
+
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post(self::HOST . self::PATH_BIND_DEVICE_CHANNEL_INFO, [
+                'system' => [
+                    'ver' => '1.0',
+                    'time' => $time,
+                    'sign' => $sign,
+                    'nonce' => $nonce,
+                    'appId' => $appId,
+                ],
+                'id' => uniqid('req_'),
+                'params' => [
+                    'deviceIds' => $deviceId,
+                    'token' => $accessToken,
+                ],
+            ]);
+
+            $data = $response->json();
+            if ($response->successful() && isset($data['result']['code']) && $data['result']['code'] === '0') {
+                LogHelper::debug("Check thông tin kênh device {$deviceId} thành công");
+                return [
+                    'success' => true,
+                    'message' => 'Check thông tin kênh device thành công',
+                    'data' => $data['result']['data'] ?? []
+                ];
+            }
+
+            LogHelper::error("Check thông tin kênh device {$deviceId} thất bại: " . json_encode($data));
+            return [
+                'success' => false,
+                'message' => $data['result']['msg'] ?? 'Check thông tin kênh device thất bại',
+                'data' => null
+            ];
+        } catch (\Throwable $th) {
+            LogHelper::error("Check thông tin kênh device {$deviceId} exception: " . $th->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Lỗi kết nối: ' . $th->getMessage(),
+                'data' => null
+            ];
+        }
+
+    }
+
+    /**
+     * Khởi động live 
+     * @param string $deviceId
+     * @return ServiceReturn
+     */
+
+    public function startLive(string $deviceId): ServiceReturn 
+    {
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            return ServiceReturn::error(
+                'Không thể lấy access token'
+            );
+        }
+
+        $signature = $this->getSign();
+        if (!$signature['success']) {
+            return ServiceReturn::error(
+                'Không thể lấy signature'
+            );
+        }
+
+        $time = $signature['data']['time'];
+        $nonce = $signature['data']['nonce'];
+        $sign = $signature['data']['sign'];
+        $appId = $signature['data']['appId'];
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post(self::HOST . self::PATH_LIVE, [
+                'system' => [
+                    'ver' => '1.0',
+                    'time' => $time,
+                    'sign' => $sign,
+                    'nonce' => $nonce,
+                    'appId' => $appId,
+                ],
+                'id' => uniqid('req_'),
+                'params' => [
+                    'streamId' => 1,
+                    'channelId' => '0',
+                    'deviceId' => $deviceId,
+                    'token' => $accessToken,
+                ],
+            ]);
+
+            $data = $response->json();
+            dd($data);
+            if ($response->successful() && isset($data['result']['code']) && $data['result']['code'] === '0') {
+                LogHelper::debug("Khởi động live device {$deviceId} thành công");
+                return ServiceReturn::success(
+                    'Khởi động live device thành công',
+                    $data['result']['data'] ?? []
+                );
+            }
+
+            LogHelper::error("Khởi động live device {$deviceId} thất bại: " . json_encode($data));
+            return ServiceReturn::error(
+                $data['result']['msg'] ?? 'Khởi động live device thất bại'
+            );
+        } catch (\Throwable $th) {
+            LogHelper::error("Khởi động live device {$deviceId} exception: " . $th->getMessage());
+            return ServiceReturn::error(
+                'Lỗi kết nối: ' . $th->getMessage()
+            );
+        }
+    }
+
+
+    /**
+     * Kiểm tra và cập nhật trạng thái camera
+     * @param Camera $camera
+     * @return bool
+     */
+    public function updateCameraStatus(Camera $camera): bool
+    {
+        // Kiểm tra device online
+        $onlineStatus = $this->checkDeviceOnline($camera->device_id);
+
+        if (!$onlineStatus['success']) {
+            LogHelper::error("Không thể kiểm tra trạng thái camera {$camera->id}: {$onlineStatus['message']}");
+            return false;
+        }
+
+        // Cập nhật trạng thái enable
+        $camera->enable = $onlineStatus['online'];
+
+        // Nếu chưa bind, thử bind
+        if (!$camera->bind_status && $camera->security_code) {
+            $bindResult = $this->bindDevice($camera->device_id, $camera->security_code);
+            if ($bindResult['success']) {
+                $camera->bind_status = true;
+            }
+        }
+
+        // Lấy thông tin channel nếu đã bind
+        if ($camera->bind_status) {
+            $channelInfo = $this->getDeviceChannelInfo($camera->device_id);
+            if ($channelInfo['success'] && isset($channelInfo['data']['channels'])) {
+                // Cập nhật số channel nếu có
+                $channels = $channelInfo['data']['channels'];
+                if (is_array($channels) && count($channels) > 0) {
+                    $camera->channel_id = count($channels) - 1; // 0-indexed
+                }
+
+                // Cập nhật model nếu có
+                if (isset($channelInfo['data']['model'])) {
+                    $camera->device_model = $channelInfo['data']['model'];
+                }
+            }
+        }
+
+        return $camera->save();
     }
 }

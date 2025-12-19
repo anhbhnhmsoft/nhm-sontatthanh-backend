@@ -109,6 +109,7 @@ return new class extends Migration
             $table->boolean('enable')->default(false)->comment('0/1 – enable hay chưa ~ enable là trạng thái thực tế của camera, còn sử dụng được hay không');
             $table->string('description', 255)->nullable()->comment('Mô tả camera');
             $table->foreignId('showroom_id')->nullable()->constrained('showrooms')->nullOnDelete()->comment('Cửa hàng trưng bày')->index();
+            $table->string('security_code')->nullable()->comment('Mã bảo mật');
             $table->softDeletes();
             $table->timestamps();
         });

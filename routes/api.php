@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\CameraController;
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\ProductController;
@@ -42,6 +43,12 @@ Route::prefix('product')->group(function () {
 Route::prefix('news')->group(function () {
     Route::get('list', [NewsController::class, 'list']);
     Route::get('{id}', [NewsController::class, 'detail']);
+});
+
+Route::prefix('camera')->middleware('auth:sanctum')->group(function () {
+    Route::get('list', [CameraController::class, 'list']);
+    Route::post('start-live', [CameraController::class, 'startLive']);
+    Route::post('stop-live', [CameraController::class, 'stopLive']);
 });
 
 Route::prefix('file')->group(function () {

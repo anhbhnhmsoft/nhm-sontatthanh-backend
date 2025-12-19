@@ -57,12 +57,12 @@ class CamerasTable
                     ->searchable(),
                 IconColumn::make('bind_status')
                     ->label('Trạng thái kết nối')
-                    ->icon(fn ($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
-                    ->color(fn ($state) => $state ? 'success' : 'danger'),
+                    ->icon(fn($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                    ->color(fn($state) => $state ? 'success' : 'danger'),
                 IconColumn::make('enable')
                     ->label('Trạng thái hoạt động')
-                    ->icon(fn ($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
-                    ->color(fn ($state) => $state ? 'success' : 'danger'),
+                    ->icon(fn($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                    ->color(fn($state) => $state ? 'success' : 'danger'),
                 ToggleColumn::make('is_active')
                     ->label('Trạng thái khóa'),
                 TextColumn::make('created_at')
@@ -85,6 +85,34 @@ class CamerasTable
                     EditAction::make()
                         ->label('Sửa')
                         ->icon('heroicon-o-pencil-square'),
+
+                    \Filament\Actions\Action::make('check_connection')
+                        ->label('Kiểm tra kết nối')
+                        ->icon('heroicon-o-signal')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Kiểm tra kết nối camera')
+                        ->modalDescription('Hệ thống sẽ bind thiết bị vào tài khoản developer và kiểm tra trạng thái kết nối. Quá trình này có thể mất vài giây.')
+                        ->modalSubmitActionLabel('Xác nhận')
+                        ->action(function ($record) {
+                            try {
+                                // Dispatch job để cập nhật trạng thái
+                                \App\Jobs\UpdateCameraStatusJob::dispatch($record);
+
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Đã gửi yêu cầu kiểm tra')
+                                    ->body('Hệ thống đang kiểm tra kết nối camera. Vui lòng đợi vài giây và refresh lại trang.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Throwable $th) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Lỗi')
+                                    ->body('Không thể kiểm tra kết nối: ' . $th->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->visible(fn($record) => ! $record->trashed()),
 
                     DeleteAction::make()
                         ->label('Xóa')

@@ -30,8 +30,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerObserve();
-        if (env('APP_ENV') !== 'local' || env('APP_DEBUG')) { // Chỉ áp dụng cho dev/staging/prod
-            URL::forceScheme('https');
+        if (env('APP_ENV') !== 'local' || env('APP_DEBUG')) { 
+            URL::forceScheme('http');
         }
     }
 

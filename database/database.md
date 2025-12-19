@@ -93,6 +93,7 @@
   - `enable` (boolean, default false) — 0/1 – enable status ~ trạng thái thực tế của camera
   - `description` (string(255), nullable)
   - `showroom_id` (FK, nullable) → `showrooms.id`, nullOnDelete, index
+  - `security_code` (string, nullable) — Mã bảo mật
   - `deleted_at` (soft deletes) 
   - `created_at`, `updated_at`
 
