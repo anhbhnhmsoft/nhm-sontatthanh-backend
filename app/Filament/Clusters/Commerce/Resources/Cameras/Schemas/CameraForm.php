@@ -3,12 +3,15 @@
 namespace App\Filament\Clusters\Commerce\Resources\Cameras\Schemas;
 
 use App\Enums\DirectFile;
+use App\Enums\UserRole;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
+use PhpParser\Node\Expr\BinaryOp\Mod;
 
 class CameraForm
 {
@@ -64,7 +67,18 @@ class CameraForm
                                     ])
                                     ->columnSpan('full')
                                     ->label('Hình ảnh')
-                            ])
+                            ]),
+                        Select::make('users')
+                            ->label('Danh sách người được truy cập')
+                            ->multiple()
+                            ->preload()
+                            ->relationship(
+                                name: 'users',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn(Builder $query, $livewire) => $query
+                                    ->where('role', UserRole::SALE->value)
+                            )
+                            ->columnSpanFull(),
                     ])
                     ->columnSpan('full'),
             ]);

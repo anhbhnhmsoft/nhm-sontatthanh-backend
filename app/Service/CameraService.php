@@ -30,7 +30,7 @@ class CameraService
                 return ServiceReturn::error('Người dùng chưa đăng nhập');
             }
 
-            // Kiểm tra quyền truy cập camera
+            // Kiểm tra quyền truy cập camera   
             $camera = $user->cameras()
                 ->where('cameras.id', $cameraId)
                 ->where('is_active', true)
@@ -54,6 +54,10 @@ class CameraService
             if (!$liveResult->isSuccess()) {
                 return ServiceReturn::error($liveResult->getMessage());
             }
+
+            $camera->update([
+                'live_status' => true,
+            ]); 
 
 
             return ServiceReturn::success(data: $liveResult->getData(), message: 'Khởi động live thành công');

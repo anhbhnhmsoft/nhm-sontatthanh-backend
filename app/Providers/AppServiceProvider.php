@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Observers\UserObserver;
 use App\Service\AuthService;
 use App\Service\BrandService;
+use App\Service\CameraService;
 use App\Service\ConfigService;
 use App\Service\NewsService;
 use App\Service\ProductService;
@@ -48,6 +49,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ProductService::class);
         $this->app->singleton(BrandService::class);
         $this->app->singleton(NewsService::class);
+        $this->app->singleton(CameraService::class);
+        $this->app->singleton(VideoLiveService::class);
     }
 
     protected function registerObserve(): void

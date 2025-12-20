@@ -2,6 +2,11 @@
 
 namespace App\Filament\Clusters\Commerce\Resources\Cameras\Tables;
 
+use App\Core\Cache\CacheKey;
+use App\Core\Cache\Caching;
+use App\Models\Camera;
+use App\Service\VideoLiveService;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -11,10 +16,12 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -32,12 +39,13 @@ class CamerasTable
                     ->label('Tên camera')
                     ->searchable(),
                 ImageColumn::make('image')
-                    ->label('Hình ảnh')
+                    ->label('Hình ảnh cover')
                     ->disk('public'),
                 TextColumn::make('users')
                     ->label('Người dùng')
+                    ->badge()
                     ->getStateUsing(function ($record) {
-                        if (!$record->users || !is_array($record->users)) {
+                        if (!$record->users) {
                             return [];
                         }
 
@@ -62,13 +70,7 @@ class CamerasTable
                     ->icon(fn($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
                     ->color(fn($state) => $state ? 'success' : 'danger'),
                 ToggleColumn::make('is_active')
-                    ->label('Trạng thái khóa'),
-                TextColumn::make('created_at')
-                    ->label('Ngày tạo')
-                    ->searchable(),
-                TextColumn::make('updated_at')
-                    ->label('Ngày cập nhật')
-                    ->searchable(),
+                    ->label('Cho phép truy cập'),
             ])
             ->filters([
                 TrashedFilter::make(),
@@ -84,7 +86,7 @@ class CamerasTable
                         ->label('Sửa')
                         ->icon('heroicon-o-pencil-square'),
 
-                    \Filament\Actions\Action::make('check_connection')
+                    Action::make('check_connection')
                         ->label('Kiểm tra kết nối')
                         ->icon('heroicon-o-signal')
                         ->color('info')
@@ -92,25 +94,96 @@ class CamerasTable
                         ->modalHeading('Kiểm tra kết nối camera')
                         ->modalDescription('Hệ thống sẽ bind thiết bị vào tài khoản developer và kiểm tra trạng thái kết nối. Quá trình này có thể mất vài giây.')
                         ->modalSubmitActionLabel('Xác nhận')
-                        ->action(function ($record) {
-                            try {
-                                // Dispatch job để cập nhật trạng thái
-                                \App\Jobs\UpdateCameraStatusJob::dispatch($record);
-
-                                \Filament\Notifications\Notification::make()
-                                    ->title('Đã gửi yêu cầu kiểm tra')
-                                    ->body('Hệ thống đang kiểm tra kết nối camera. Vui lòng đợi vài giây và refresh lại trang.')
-                                    ->success()
-                                    ->send();
-                            } catch (\Throwable $th) {
-                                \Filament\Notifications\Notification::make()
+                        ->action(function (Camera $record) {
+                            /** @var VideoLiveService $videoLiveService */
+                            $videoLiveService = app(VideoLiveService::class);
+                            $bindRes = $videoLiveService->bindDevice($record->device_id, $record->security_code);
+                            if ($bindRes->isError()) {
+                                Notification::make()
                                     ->title('Lỗi')
-                                    ->body('Không thể kiểm tra kết nối: ' . $th->getMessage())
+                                    ->body('Không thể kiểm tra kết nối: ' . $bindRes->getMessage())
                                     ->danger()
                                     ->send();
+                                return;
                             }
+                            $channelRes = $videoLiveService->getDeviceChannelInfo($record->device_id);
+                            $res = $videoLiveService->startLive($record->device_id);
+                            if ($channelRes->isError()) {
+                                Notification::make()
+                                    ->title('Lỗi')
+                                    ->body('Không thể kiểm tra kết nối: ' . $channelRes->getMessage())
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                            if ($res->isError()) {
+                                Notification::make()
+                                    ->title('Lỗi')
+                                    ->body('Không thể bắt đầu stream: ' . $res->getMessage())
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                            Notification::make()
+                                ->title('Kiểm tra hoàn tất')
+                                ->body('Hệ thống đã kiểm tra kết nối camera. Vui lòng refresh lại trang.')
+                                ->success()
+                                ->send();
                         })
                         ->visible(fn($record) => ! $record->trashed()),
+                    Action::make('view-stream')
+                        ->label('Xem camera trực tiếp')
+                        ->icon('heroicon-o-eye')
+                        ->color('success')
+                        ->mountUsing(function (Action $action, $record) {
+                            $videoLiveService = app(VideoLiveService::class);
+                            $res = $videoLiveService->viewLive($record->device_id);
+
+                            if ($res->isError()) {
+                                Notification::make()
+                                    ->title('Lỗi kết nối')
+                                    ->body($res->getMessage())
+                                    ->danger()
+                                    ->send();
+
+                                $action->halt();
+                            }
+
+                            $action->arguments([
+                                'hls_url' => $res->getData()['hls'],
+                            ]);
+                        })
+                        ->modalContent(fn(array $arguments) => view('filament.pages.video-player', [
+                            'url' => $arguments['hls_url'] ?? null,
+                        ]))
+                        ->modalWidth('4xl')
+                        ->modalHeading(fn($record) => "Live Stream: {$record->name}")
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Đóng'),
+                    Action::make('unbind')
+                        ->label('Gỡ kết nối')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->action(function ($record) {
+                            $videoLiveService = app(VideoLiveService::class);
+                            $res = $videoLiveService->unbindDevice($record->device_id);
+                            Caching::deleteCache(CacheKey::CACHE_LIVE_STREAM, $record->device_id);
+                            if ($res->isError()) {
+                                Notification::make()
+                                    ->title('Lỗi kết nối')
+                                    ->body($res->getMessage())
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                            Notification::make()
+                                ->title('Gỡ kết nối')
+                                ->body('Hệ thống đã gỡ kết nối camera. Vui lòng refresh lại trang.')
+                                ->success()
+                                ->send();
+                        })
+                        ->visible(fn($record) => ! $record->trashed()),
+
 
                     DeleteAction::make()
                         ->label('Xóa')
@@ -126,7 +199,7 @@ class CamerasTable
                         ->icon('heroicon-o-arrow-path')
                         ->visible(fn($record) => $record->trashed()),
                 ]),
-            ])
+            ], position: RecordActionsPosition::BeforeColumns)
             ->filters([
                 TrashedFilter::make(),
                 SelectFilter::make('showroom_id')
