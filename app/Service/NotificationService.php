@@ -41,7 +41,7 @@ class NotificationService extends BaseService
 
             $user = Auth::user();
             if (!$user) {
-                throw new ServiceException('Không tìm thấy người dùng');
+                return ServiceReturn::error('Không tìm thấy người dùng');
             }
 
             $userDevice = $this->userDeviceModel->where('user_id', $user->id)->where('device_id', $deviceId)->first();
@@ -74,7 +74,7 @@ class NotificationService extends BaseService
         try {
             $user = Auth::user();
             if (!$user) {
-                throw new ServiceException('Không tìm thấy người dùng');
+                return ServiceReturn::error('Không tìm thấy người dùng');
             }
 
             $notifications = $this->notificationModel
@@ -98,12 +98,12 @@ class NotificationService extends BaseService
         try {
             $user = Auth::user();
             if (!$user) {
-                throw new ServiceException('Không tìm thấy người dùng');
+                return ServiceReturn::error('Không tìm thấy người dùng');
             }
 
             $notification = $this->notificationModel->where('user_id', $user->id)->where('id', $id)->first();
             if (!$notification) {
-                throw new ServiceException('Không tìm thấy thông báo');
+                return ServiceReturn::error('Không tìm thấy thông báo');
             }
 
             $notification->read_at = now();
