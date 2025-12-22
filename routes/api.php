@@ -49,9 +49,7 @@ Route::prefix('news')->group(function () {
     Route::get('{id}', [NewsController::class, 'detail']);
 });
 
-Route::prefix('camera')->middleware('auth:sanctum')->group(function () {
-    Route::post('start-live', [CameraController::class, 'startLive']);
-});
+Route::post('start-live', [CameraController::class, 'startLive'])->middleware('auth:sanctum');
 
 Route::prefix('file')->group(function () {
     Route::get('/{path}', [FileController::class, 'download'])->where('path', '.*')->name('file.download');
@@ -61,12 +59,11 @@ Route::prefix('notification')->middleware(['auth:sanctum'])->group(function () {
     // Lấy danh sách notifications
     Route::get('list', [NotificationController::class, 'paginate']);
     // Đánh dấu đã đọc
-    Route::put('read/{id}', [NotificationController::class, 'markRead'])->where('id', '[0-9]+');
+    Route::post('read/{id}', [NotificationController::class, 'markRead'])->where('id', '[0-9]+');
     // Đánh dấu tất cả đã đọc
-    Route::put('read-all', [NotificationController::class, 'markAllRead']);
+    Route::post('read-all', [NotificationController::class, 'markAllRead']);
     // Lấy số lượng chưa đọc
     Route::get('unread-count', [NotificationController::class, 'unreadCount']);
-
     // Lấy device token
     Route::post('device-token', [NotificationController::class, 'deviceToken']);
 });
