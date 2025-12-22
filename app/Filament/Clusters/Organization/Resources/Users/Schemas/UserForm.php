@@ -59,11 +59,11 @@ class UserForm
                                         'max_length' => 'Số điện thoại không được vượt quá 255 ký tự',
                                         'unique' => 'Số điện thoại đã tồn tại',
                                     ]),
-                                Select::make('managedSales')
+                                Select::make('collaborators')
                                     ->label('Danh sách CTV đang quản lý')
                                     ->multiple()
                                     ->relationship(
-                                        name: 'managedSales',
+                                        name: 'collaborators',
                                         titleAttribute: 'name',
                                         modifyQueryUsing: fn(Builder $query, $livewire) => $query
                                             ->where('role', UserRole::CTV->value)

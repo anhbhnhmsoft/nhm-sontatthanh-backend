@@ -30,32 +30,39 @@ class UserResource extends JsonResource
                 'logo' => $this->showroom->logo ? Storage::disk('public')->url($this->showroom->logo) : null,
             ];
 
-            $manageSale = $this->managedSales->map(function ($sale) {
+            $collaborators = $this->collaborators->map(function ($sale) {
                 return [
                     'id' => (string) $sale->id,
                     'name' => $sale->name,
+                    'phone' => $sale->phone,
                 ];
             });
+            $sale = null;
         } else {
             $department = null;
             $showroom = null;
-            $manageSale = null;
+            $collaborators = null;
+            $sale = [
+                'id' => (string) $this->sale->id,
+                'name' => $this->sale->name,
+                'phone' => $this->sale->phone,
+            ];
         }
         return [
             'id' => (string) $this->id,
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'avatar' => $this->avatar ? Storage::disk('public')->url($this->avatar) : null,
+            'avatar' => (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) ? $this->avatar : ($this->avatar ? Storage::disk('public')->url($this->avatar) : null),
             'referral_code' => $this->referral_code,
             'role' => $this->role,
             'joined_at' => $this->joined_at,
             'is_active' => $this->is_active,
             'department_id' => $this->department_id,
-            'sale_id' => $this->sale_id,
             'department' =>  $department ?? null,
             'showroom' => $showroom ?? null,
-            'manage_sale' => $manageSale ?? null,
+            'manage_sale' => $collaborators ?? null,
+            'sale' => $sale ?? null,
         ];
     }
 }

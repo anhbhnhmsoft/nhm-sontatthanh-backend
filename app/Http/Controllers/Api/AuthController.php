@@ -12,6 +12,7 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Service\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends BaseController
@@ -156,6 +157,7 @@ class AuthController extends BaseController
             $request->validated('old_password'),
             $request->validated('new_password'),
             $request->validated('email'),
+            $request->validated('phone'),
         );
 
         if ($result->isError()) {
@@ -238,6 +240,40 @@ class AuthController extends BaseController
         }
 
         return $this->sendSuccess(
+            $result->getMessage()
+        );
+    }
+
+    /**
+     * Xác thực bằng Zalo (Unified Login/Register)
+     */
+    public function zaloAuthenticate(Request $request): JsonResponse
+    {
+        $request->validate([
+            'access_token' => 'required|string',
+        ],[
+            'access_token.required' => 'Access token không được để trống',
+        ]);
+
+        $result = $this->authService->authenticateWithZalo(
+            $request->input('access_token'),
+        );
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+                400,
+            );
+        }
+
+        $user = $result->getData()['user'];
+        $token = $result->getData()['token'];
+
+        return $this->sendSuccess(
+            [
+                'user' => UserResource::make($user),
+                'token' => $token,
+            ],
             $result->getMessage()
         );
     }

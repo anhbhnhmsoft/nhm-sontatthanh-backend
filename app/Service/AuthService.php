@@ -26,7 +26,55 @@ class AuthService extends BaseService
 
     public function __construct(
         protected User $userModel,
+        protected ZaloService $zaloService,
     ) {}
+
+    /**
+     * Authenticate with Zalo (Unified Login/Register)
+     * @param string $accessToken
+     * @return ServiceReturn
+     */
+    public function authenticateWithZalo(string $accessToken): ServiceReturn
+    {
+        try {
+            // Step 1: Get Zalo Profile
+            $zaloProfile = $this->zaloService->getUserProfile($accessToken);
+            if (!$zaloProfile || !isset($zaloProfile['id'])) {
+                return ServiceReturn::error('Không thể lấy thông tin từ Zalo. Token có thể đã hết hạn.');
+            }
+
+            $zaloId = $zaloProfile['id'];
+            $name = $zaloProfile['name'] ?? '';
+            $avatarUrl = $zaloProfile['avatar'] ?? null;
+
+            $user = $this->userModel->where('zalo_id', $zaloId)->first();
+            if (!$user) {    
+                $user = $this->userModel->create([
+                    'zalo_id' => $zaloId,
+                    'phone' => null,
+                    'name' => $name,
+                    'role' => UserRole::CTV->value,
+                    'joined_at' => now(),
+                    'is_active' => true,
+                    'avatar' => $avatarUrl,
+                ]);
+            }
+
+            if (!$user->is_active) {
+                return ServiceReturn::error('Tài khoản của bạn đang bị khóa');
+            }
+
+            $token = $this->createTokenAuth($user);
+
+            return ServiceReturn::success([
+                'user' => $user,
+                'token' => $token
+            ], 'Xác thực Zalo thành công');
+        } catch (\Throwable $th) {
+            LogHelper::error('AuthService@authenticateWithZalo error: ' . $th->getMessage());
+            return ServiceReturn::error('Có lỗi xảy ra khi xác thực Zalo');
+        }
+    }
 
     /**
      * Đăng nhập
@@ -61,7 +109,7 @@ class AuthService extends BaseService
             // tạo token
             $token = $this->createTokenAuth($user);
             return ServiceReturn::success([
-                'user' => $user->load(['department', 'managedSales', 'cameras']),
+                'user' => $user->load(['department', 'collaborators', 'cameras']),
                 'token' => $token
             ], 'Đăng nhập thành công');
         } catch (\Throwable $th) {
@@ -376,7 +424,7 @@ class AuthService extends BaseService
             Caching::deleteCache(key: CacheKey::CACHE_KEY_OTP_REGISTER_ATTEMPTS, uniqueKey: $phone);
 
             return ServiceReturn::success([
-                'user' => $user->load(['department', 'managedSales', 'cameras']),
+                'user' => $user->load(['department', 'collaborators', 'cameras']),
                 'token' => $this->createTokenAuth($user),
             ], 'Xác thực và đăng ký thành công');
         } catch (\Throwable $th) {
@@ -418,9 +466,10 @@ class AuthService extends BaseService
      * @param ?string $oldPassword
      * @param ?string $newPassword
      * @param ?string $email
+     * @param ?string $phone
      * @return ServiceReturn
      */
-    public function editProfile(?string $name, ?UploadedFile $avatar, ?string $oldPassword, ?string $newPassword, ?string $email): ServiceReturn
+    public function editProfile(?string $name, ?UploadedFile $avatar, ?string $oldPassword, ?string $newPassword, ?string $email, ?string $phone): ServiceReturn
     {
         try {
             /**
@@ -441,6 +490,9 @@ class AuthService extends BaseService
             }
             if ($email && isset($email)) {
                 $user->email = $email;
+            }
+            if ($phone && isset($phone)) {
+                $user->phone = $phone;
             }
             $user->save();
 

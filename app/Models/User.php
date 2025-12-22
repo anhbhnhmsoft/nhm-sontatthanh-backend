@@ -19,6 +19,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'zalo_id',
         'name',
         'email',
         'phone',
@@ -31,7 +32,7 @@ class User extends Authenticatable
         'showroom_id',
         'password',
         'email_verified_at',
-        'phone_verified_at',    
+        'phone_verified_at',
         'sale_id',
     ];
 
@@ -77,7 +78,7 @@ class User extends Authenticatable
         return $this->belongsToMany(Camera::class, 'camera_user')->withTimestamps();
     }
 
-    public function managedSales()
+    public function collaborators()
     {
         return $this->hasMany(User::class, 'sale_id');
     }

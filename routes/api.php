@@ -11,7 +11,8 @@ use App\Http\Controllers\Api\ShowroomController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::middleware(['throttle:5,1'])->group(function () {
+    // Route::middleware(['throttle:5,1'])->
+    // Route::group(function () {
         Route::post('login', [AuthController::class, 'login']);
         Route::post('register', [AuthController::class, 'register']);
         Route::post('resend', [AuthController::class, 'resendOtp']);
@@ -19,7 +20,8 @@ Route::prefix('auth')->group(function () {
         Route::post('forgot-password/send', [AuthController::class, 'sendForgotPasswordOtp']);
         Route::post('forgot-password/verify', [AuthController::class, 'verifyForgotPasswordOtp']);
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
-    });
+        Route::post('zalo-authenticate', [AuthController::class, 'zaloAuthenticate']);
+    // });
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);

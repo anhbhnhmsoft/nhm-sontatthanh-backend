@@ -415,6 +415,9 @@ class VideoLiveService
                 'liveToken'  => $resultData['liveToken'],
                 'channelId'  => $resultData['channelId'],
                 'liveStatus' => $resultData['liveStatus'],
+                'name'       => $device->name,
+                'deviceId'   => $deviceId,
+                'description' => $device->description,
             ];
 
             Caching::setCache(CacheKey::CACHE_LIVE_STREAM, $broadcast, $deviceId, 60 * 60);

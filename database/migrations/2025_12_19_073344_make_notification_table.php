@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('notifications', function (Blueprint $table) {
-            $table->dropColumn(['id', 'notifiable_id']);
+            $table->dropColumn(['id','notifiable_type']);
             $table->id()->first();
             $table->foreignId('user_id')
                 ->after('type')

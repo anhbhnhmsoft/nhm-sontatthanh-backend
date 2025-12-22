@@ -18,6 +18,7 @@ class EditProfileRequest extends FormRequest
         return [
             'name' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'phone' => 'required|string|regex:/^(0|\+84)[3|5|7|8|9][0-9]{8}$/',
             'old_password' => 'nullable|string|min:6',
             'new_password' => 'nullable|string|min:6',
             'email' => 'nullable|email',
@@ -35,6 +36,8 @@ class EditProfileRequest extends FormRequest
             'old_password.min' => 'Mật khẩu cũ phải có ít nhất 6 ký tự',
             'new_password.min' => 'Mật khẩu mới phải có ít nhất 6 ký tự',
             'email.email' => 'Email không hợp lệ',
+            'phone.required' => 'Vui lòng nhập số điện thoại',
+            'phone.regex' => 'Số điện thoại không đúng định dạng',
         ];
     }
 

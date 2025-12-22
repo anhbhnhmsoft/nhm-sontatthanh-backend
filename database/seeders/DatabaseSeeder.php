@@ -25,9 +25,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Run additional seed routines (skip in production)
-        $this->seedProvince();
+        // $this->seedProvince();
         // $this->seedAdmin();
-        // $this->seedConfig();
+        $this->seedConfig();
     }
 
     private function seedProvince()
@@ -136,6 +136,18 @@ class DatabaseSeeder extends Seeder
                 ],
                 [
                     'config_key' => ConfigKey::APP_SECRET->value,
+                    'config_value' => '12345678',
+                    'config_type' => ConfigType::KEY->value,
+                    'description' => 'App Secret',
+                ],
+                [
+                    'config_key' => ConfigKey::APP_ID_ZALO->value,
+                    'config_value' => '12345678',
+                    'config_type' => ConfigType::KEY->value,
+                    'description' => 'App Secret',
+                ],
+                [
+                    'config_key' => ConfigKey::APP_SECRET_ZALO->value,
                     'config_value' => '12345678',
                     'config_type' => ConfigType::KEY->value,
                     'description' => 'App Secret',
