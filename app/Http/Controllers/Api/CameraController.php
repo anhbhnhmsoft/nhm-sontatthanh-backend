@@ -21,7 +21,7 @@ class CameraController extends BaseController
     public function startLive(Request $request): JsonResponse
     {
         $request->validate([
-            'device_id' => 'required|integer|exists:cameras,device_id',
+            'device_id' => 'required|string|exists:cameras,device_id',
         ]);
 
         $result = $this->cameraService->startCameraLive(
@@ -37,5 +37,4 @@ class CameraController extends BaseController
             $result->getMessage()
         );
     }
-
 }

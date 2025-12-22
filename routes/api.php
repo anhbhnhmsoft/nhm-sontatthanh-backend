@@ -48,8 +48,9 @@ Route::prefix('news')->group(function () {
     Route::get('list', [NewsController::class, 'list']);
     Route::get('{id}', [NewsController::class, 'detail']);
 });
-
-Route::post('start-live', [CameraController::class, 'startLive'])->middleware('auth:sanctum');
+Route::prefix('service')->middleware('auth:sanctum')->group(function () {
+    Route::post('start-live', [CameraController::class, 'startLive']);
+});
 
 Route::prefix('file')->group(function () {
     Route::get('/{path}', [FileController::class, 'download'])->where('path', '.*')->name('file.download');

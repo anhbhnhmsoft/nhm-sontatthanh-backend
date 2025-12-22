@@ -16,11 +16,11 @@ class CameraService
 
     /**
      * Khởi động live stream cho camera
-     * @param int $cameraId
+     * @param string $deviceId
      * @param User|null $user
      * @return ServiceReturn
      */
-    public function startCameraLive(int $cameraId, ?User $user = null): ServiceReturn
+    public function startCameraLive(string $deviceId, ?User $user = null): ServiceReturn
     {
         try {
             /** @var User $user */
@@ -32,7 +32,7 @@ class CameraService
 
             // Kiểm tra quyền truy cập camera   
             $camera = $user->cameras()
-                ->where('cameras.id', $cameraId)
+                ->where('cameras.device_id', $deviceId)
                 ->where('is_active', true)
                 ->where('enable', true)
                 ->first();
