@@ -29,6 +29,7 @@ class NotificationsTable
                     ->limit(50),
                 \Filament\Tables\Columns\TextColumn::make('type')
                     ->label('Loại')
+                    ->formatStateUsing(fn($state) => \App\Enums\UserNotificationType::label((int) $state))
                     ->badge(),
                 \Filament\Tables\Columns\TextColumn::make('created_at')
                     ->label('Ngày tạo')
