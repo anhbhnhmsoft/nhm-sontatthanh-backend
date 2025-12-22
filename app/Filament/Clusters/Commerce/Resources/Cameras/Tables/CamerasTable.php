@@ -167,7 +167,6 @@ class CamerasTable
                         ->action(function ($record) {
                             $videoLiveService = app(VideoLiveService::class);
                             $res = $videoLiveService->unbindDevice($record->device_id);
-                            Caching::deleteCache(CacheKey::CACHE_LIVE_STREAM, $record->device_id);
                             if ($res->isError()) {
                                 Notification::make()
                                     ->title('Lỗi kết nối')

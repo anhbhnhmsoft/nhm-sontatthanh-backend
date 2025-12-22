@@ -99,11 +99,6 @@ enum CacheKey: string
     case CACHE_PRODUCT = 'CACHE_PRODUCT';
 
     /**
-     * Lưu lại danh sách news
-     */
-    case CACHE_NEWS = 'CACHE_NEWS';
-
-    /**
      * Lưu lại cofig key
      */
     case CACHE_CONFIG_KEY = 'CACHE_CONFIG_KEY';

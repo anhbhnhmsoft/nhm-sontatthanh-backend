@@ -67,6 +67,7 @@ class ConfigService extends BaseService
         try {
             // Chuẩn bị dữ liệu cho phương thức upsert
             $dataToUpdate = collect($values)->map(function ($value, $key) {
+                Caching::deleteCache(CacheKey::CACHE_CONFIG_KEY, $key);
                 return [
                     'config_key' => $key,
                     'config_value' => $value,
