@@ -56,4 +56,32 @@ class ZaloService extends BaseService
             return null;
         }
     }
+
+    /**
+     * Get user access token from Zalo Graph API
+     * @param string $code
+     * @return string|null
+     */
+    public function getAccessToken(string $code): ?string
+    {
+        try {
+            $response = Http::withHeaders(
+                [
+                    'access_token' => $this->zalo->getAccessToken($code)
+                ]
+            )->get(ZaloEndPoint::API_GRAPH_ME, [
+                'fields' => 'id,name,picture'
+            ]);
+            if ($response->successful()) {
+                $data = $response->json();
+                return $data['access_token'];
+            }
+
+            Log::error('Zalo Access Token Error: ' . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Zalo Access Token Exception: ' . $e->getMessage());
+            return null;
+        }
+    }
 }

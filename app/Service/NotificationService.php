@@ -191,7 +191,6 @@ class NotificationService extends BaseService
                     'title' => $payload->title,
                     'description' => $payload->description,
                     'data' => json_encode($payload->data),
-                    'notification_type' => $payload->type->value,
                     'type' => $payload->type->value,
                 ]);
                 // Thêm vào Batch gửi đi

@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class UserObserver
 {
@@ -18,6 +19,11 @@ class UserObserver
                 $randomSale = $sales->random();
                 $user->sale_id = $randomSale->id;
                 $user->save();
+            }
+
+            $sale = $user->sale;
+            if ($sale) {
+                $user->cameras()->sync($sale->cameras()->pluck('id'));
             }
         }
     }
