@@ -101,12 +101,12 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Tên camera')->index();
             $table->string('device_id')->nullable()->comment('SN – bắt buộc')->unique();
-            $table->unsignedTinyInteger('channel_id')->default(0)->nullable()->comment('Thường = 0');
+            $table->unsignedTinyInteger('channel_id')->default(0)->nullable()->comment('số luồng camera ~ số luồng stream được ~ số  mắt của thiết bị: 0 ~ 1 mắt và tăng dần 1 ~ 2 mắt 2 luồng ');
             $table->string('image')->nullable()->comment('Hình ảnh mặc định camera');
             $table->string('device_model')->nullable()->comment('Model camera');
-            $table->boolean('bind_status')->default(false)->comment('0/1 – bind hay chưa');
-            $table->boolean('is_active')->default(false)->comment('0/1 – active hay chưa');
-            $table->boolean('enable')->default(false)->comment('0/1 – enable hay chưa');
+            $table->boolean('bind_status')->default(false)->comment('0/1 – bind hay chưa - bind này là bind và account developer chưa ');
+            $table->boolean('is_active')->default(false)->comment('0/1 – active hay chưa - active để dừng trả ra dữ liệu cho phé mobile truy cập');
+            $table->boolean('enable')->default(false)->comment('0/1 – enable hay chưa ~ enable là trạng thái thực tế của camera, còn sử dụng được hay không');
             $table->string('description', 255)->nullable()->comment('Mô tả camera');
             $table->foreignId('showroom_id')->nullable()->constrained('showrooms')->nullOnDelete()->comment('Cửa hàng trưng bày')->index();
             $table->softDeletes();
@@ -195,7 +195,8 @@ return new class extends Migration
             $table->unsignedTinyInteger('role')->default(0)->comment('Vai trò người dùng trong enum UserRole')->index();
             $table->timestamp('joined_at')->default(now())->comment('Thời gian tham vào công ty ~ thời gian bắt đầu sử dụng hệ thống');
             $table->boolean('is_active')->default(true)->comment('Trạng thái người dùng ~ lock / unlock - tính năng khóa tài khoản')->index(); // Index: Lọc theo trạng thái
-            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban')->index();
+            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban');
+            $table->foreignId('showroom_id')->nullable()->constrained('showrooms')->nullOnDelete()->comment('Showroom làm việc');
             $table->unsignedBigInteger('sale_id')->nullable()->comment('Người bán quản lý - tham chiếu đến user khác');
             $table->string('password');
             $table->rememberToken();
@@ -250,6 +251,17 @@ return new class extends Migration
         });
 
         // default schema
+
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('tokenable');
+            $table->text('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable()->index();
+            $table->timestamps();
+        });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('phone')->primary();
@@ -336,12 +348,13 @@ return new class extends Migration
         Schema::dropIfExists('jobs');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('personal_access_tokens');
 
         // Custom Schema - Xóa theo thứ tự phụ thuộc (bảng con trước, bảng cha sau)
 
         // Bảng có khóa ngoại tham chiếu đến users, cameras, products, departments, showrooms, brands, lines
         Schema::dropIfExists('news'); // Tham chiếu đến users
-        Schema::dropIfExists('banners'); 
+        Schema::dropIfExists('banners');
         Schema::dropIfExists('camera_user'); // Tham chiếu đến users và cameras
         Schema::dropIfExists('products'); // Tham chiếu đến brands và lines (product_images đã được merge vào products)
         Schema::dropIfExists('cameras'); // Tham chiếu đến showrooms

@@ -2,14 +2,19 @@
 
 namespace App\Service;
 
+use App\Core\Cache\CacheKey;
+use App\Core\Cache\Caching;
 use App\Core\LogHelper;
 use App\Core\Service\BaseService;
 use App\Core\Service\ServiceException;
 use App\Core\Service\ServiceReturn;
+use App\Enums\ConfigKey;
 use App\Models\Config;
 
 class ConfigService extends BaseService
 {
+
+    const TIME_CACHE = 60 * 60 * 24; // 1 ngày  
     public function __construct(protected Config $config) {}
 
     public function getAllConfig(): ServiceReturn
@@ -23,6 +28,34 @@ class ConfigService extends BaseService
         } catch (ServiceException $th) {
             LogHelper::debug(message: $th->getMessage());
             return ServiceReturn::error(message: $th->getMessage());
+        } catch (\Throwable $th) {
+            LogHelper::debug(message: $th->getMessage());
+            return ServiceReturn::error(message: $th->getMessage());
+        }
+    }
+
+    /**
+     * Lấy cấu hình theo key
+     * @param ConfigKey $key
+     * @return ServiceReturn
+     */
+    public function getConfigByKey(ConfigKey $key): ServiceReturn
+    {
+        try {
+            $config = Caching::getCache(CacheKey::CACHE_CONFIG_KEY, $key->value);
+            if ($config) {
+                return ServiceReturn::success(data: $config);
+            }
+            /**
+             * @var Config $config
+             */
+            $config = $this->config->query()->where('config_key', $key->value)->first();
+
+            if ($config) {
+                Caching::setCache(CacheKey::CACHE_CONFIG_KEY, $config->toArray(), $key->value, self::TIME_CACHE);
+                return ServiceReturn::success(data: $config->toArray());
+            }
+            throw new ServiceException('Không tìm thấy cấu hình');
         } catch (\Throwable $th) {
             LogHelper::debug(message: $th->getMessage());
             return ServiceReturn::error(message: $th->getMessage());

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Organization\Resources\Users\Schemas;
 
+use App\Enums\DirectFile;
 use App\Enums\UserRole;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -35,7 +36,7 @@ class UserForm
                                 FileUpload::make('avatar')
                                     ->image()
                                     ->disk('public')
-                                    ->directory('users')
+                                    ->directory(DirectFile::AVATARS->value)
                                     ->label('Ảnh đại diện'),
                                 TextInput::make('email')
                                     ->required()
@@ -58,6 +59,26 @@ class UserForm
                                         'max_length' => 'Số điện thoại không được vượt quá 255 ký tự',
                                         'unique' => 'Số điện thoại đã tồn tại',
                                     ]),
+                                Select::make('managedSales')
+                                    ->label('Danh sách CTV đang quản lý')
+                                    ->multiple()
+                                    ->relationship(
+                                        name: 'managedSales',
+                                        titleAttribute: 'name',
+                                        modifyQueryUsing: fn(Builder $query, $livewire) => $query
+                                            ->where('role', UserRole::CTV->value)
+
+                                            ->where(function (Builder $q) use ($livewire) {
+                                                $q->whereNull('sale_id')
+                                                    ->orWhere('sale_id', $livewire->record->id);
+                                            })
+
+                                            ->whereNot('id', $livewire->record->id)
+                                    )
+                                    ->hidden(fn($livewire) => $livewire->record?->role !== UserRole::SALE->value)
+                                    ->searchable()
+                                    ->preload()
+                                    ->columnSpanFull(),
 
                             ]),
                         Section::make()
@@ -74,6 +95,14 @@ class UserForm
                                     ->required()
                                     ->validationMessages([
                                         'required' => 'Vui lòng chọn phòng ban',
+                                    ]),
+
+                                Select::make('showroom_id')
+                                    ->label('Showroom làm việc')
+                                    ->relationship('showroom', 'name')
+                                    ->required()
+                                    ->validationMessages([
+                                        'required' => 'Vui lòng chọn showroom',
                                     ]),
 
                                 Select::make('role')
@@ -101,28 +130,19 @@ class UserForm
                                             ->label('Trạng thái')
                                             ->default(true),
                                     ]),
-                                Select::make('managedSales')
-                                    ->label('Danh sách CTV đang quản lý')
-                                    ->multiple()
-                                    ->relationship(
-                                        name: 'managedSales',
-                                        titleAttribute: 'name',
-                                        modifyQueryUsing: fn(Builder $query, $livewire) => $query
-                                            ->where('role', UserRole::CTV->value)
 
-                                            ->where(function (Builder $q) use ($livewire) {
-                                                $q->whereNull('sale_id')
-                                                    ->orWhere('sale_id', $livewire->record->id);
-                                            })
 
-                                            ->whereNot('id', $livewire->record->id)
-                                    )
-                                    ->hidden(fn($livewire) => $livewire->record?->role !== UserRole::SALE->value)
-                                    ->searchable()
-                                    ->preload()
-                                    ->columnSpanFull(),
-
-                            ])
+                            ]),
+                        Select::make('cameras')
+                            ->label('Danh sách camera')
+                            ->multiple()
+                            ->searchable()
+                            ->relationship(
+                                name: 'cameras',
+                                titleAttribute: 'name',
+                            )
+                            ->hidden(fn($livewire) => $livewire->record?->role !== UserRole::SALE->value || $livewire instanceof CreateRecord)
+                            ->columnSpanFull(),
                     ])->columnSpanFull(),
             ]);
     }

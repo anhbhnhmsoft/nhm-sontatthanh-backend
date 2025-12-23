@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Commerce\Resources\Cameras\Schemas;
 
+use App\Enums\DirectFile;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -65,7 +66,7 @@ class CameraForm
                                     ]),
                                 FileUpload::make('image')
                                     ->disk('public')
-                                    ->directory('camera')
+                                    ->directory(DirectFile::CAMERAS->value)
                                     ->image()
                                     ->required()
                                     ->validationMessages([

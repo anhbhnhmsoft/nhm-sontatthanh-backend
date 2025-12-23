@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Media\Resources\News\Schemas;
 
+use App\Enums\DirectFile;
 use App\Enums\NewsType;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
@@ -32,6 +33,7 @@ class NewsForm
                                 FileUpload::make('image')
                                     ->label('Hình ảnh')
                                     ->required()
+                                    ->directory(DirectFile::NEWS->value)
                                     ->disk('public')
                                     ->image()
                                     ->maxSize(10240)
@@ -41,9 +43,9 @@ class NewsForm
                                     ]),
                                 TextInput::make('description')
                                     ->label('Mô tả')
-                                    ->required()
+                                    ->maxLength(255)
                                     ->validationMessages([
-                                        'required' => 'Mô tả là bắt buộc',
+                                        'max_length' => 'Mô tả không được vượt quá 255 ký tự',
                                     ]),
                                 Select::make('type')
                                     ->label('Loại tin tức')
@@ -54,9 +56,9 @@ class NewsForm
                                     ]),
                                 TextInput::make("source")
                                     ->label('Nguồn')
-                                    ->required()
+                                    ->maxLength(255)
                                     ->validationMessages([
-                                        'required' => 'Nguồn là bắt buộc',
+                                        'max_length' => 'Nguồn không được vượt quá 255 ký tự',
                                     ]),
                                 DateTimePicker::make('published_at')
                                     ->label('Ngày đăng')
@@ -66,6 +68,7 @@ class NewsForm
                                     ]),
                                 TextInput::make('view_count')
                                     ->label('Số lượt xem')
+                                    ->disabled()
                                     ->numeric()
                                     ->default(0),
 

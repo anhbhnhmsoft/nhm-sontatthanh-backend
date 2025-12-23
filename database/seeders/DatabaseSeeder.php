@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ConfigKey;
 use App\Enums\UserRole;
 use App\Enums\ConfigType;
 use App\Models\Config;
@@ -24,9 +25,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Run additional seed routines (skip in production)
-        // $this->seedProvince();
+        $this->seedProvince();
         // $this->seedAdmin();
-        $this->seedConfig();
+        // $this->seedConfig();
     }
 
     private function seedProvince()
@@ -107,7 +108,7 @@ class DatabaseSeeder extends Seeder
                 ['email' => 'admin@admin.vn'],
                 [
                     'name' => 'Super Admin',
-                    'email' => 'admin@admin.vn',
+                    'phone' => '0123456789',
                     'password' => bcrypt('Test12345678@'),
                     'role' => UserRole::ADMIN->value,
                     'is_active' => true,
@@ -128,13 +129,13 @@ class DatabaseSeeder extends Seeder
         try {
             $configs = [
                 [
-                    'config_key' => 'APP_ID',
+                    'config_key' => ConfigKey::APP_ID->value,
                     'config_value' => '12345678',
                     'config_type' => ConfigType::KEY->value,
                     'description' => 'Client ID App',
                 ],
                 [
-                    'config_key' => 'APP_SECRET',
+                    'config_key' => ConfigKey::APP_SECRET->value,
                     'config_value' => '12345678',
                     'config_type' => ConfigType::KEY->value,
                     'description' => 'App Secret',

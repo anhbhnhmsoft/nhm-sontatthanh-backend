@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Commerce\Resources\Products\Schemas;
 
+use App\Enums\DirectFile;
 use Dom\Text;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
@@ -53,9 +54,11 @@ class ProductForm
                                         $discount = $get('discount_percent');
                                         if ($price && is_numeric($price)) {
                                             if ($discount && is_numeric($discount)) {
-                                                $set('sale_price', $price - ($price * $discount / 100));
+                                                $set('sell_price', $price + ($price * $discount / 100));
+                                                $set('price_discount', $price * $discount / 100);
                                             } else {
-                                                $set('sale_price', $price);
+                                                $set('sell_price', $price);
+                                                $set('price_discount', 0);
                                             }
                                         }
                                     })
@@ -66,39 +69,43 @@ class ProductForm
                                 TextInput::make('discount_percent')
                                     ->label('Mức chiết khấu (%)')
                                     ->numeric()
+                                    ->default(0)
                                     ->minValue(0)
                                     ->maxValue(100)
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(function (Get $get, Set $set) {
                                         $price = $get('price');
-                                        $sale_price = $get('sale_price');
                                         $discount = $get('discount_percent');
-                                        if ($price && is_numeric($price) && $discount !== null && is_numeric($discount) && $sale_price !== null && is_numeric($sale_price)) {
-                                            $set('price_discount', $price - ($price * $discount / 100));
-                                        } else {
-                                            $set('price_discount', $sale_price - ($sale_price * $discount / 100));
+                                        if ($price && is_numeric($price)) {
+                                            if ($discount && is_numeric($discount)) {
+                                                $set('sell_price', $price + ($price * $discount / 100));
+                                                $set('price_discount', $price * $discount / 100);
+                                            } else {
+                                                $set('sell_price', $price);
+                                                $set('price_discount', 0);
+                                            }
                                         }
                                     }),
                                 TextInput::make('sale_price')
                                     ->label('Giá khuyến mãi')
                                     ->numeric()
-                                    ->readOnly()
+                                    ->default(0)
                                     ->dehydrated()
                                     ->validationMessages([
                                         'numeric' => 'Giá khuyến mãi phải là số',
                                     ]),
                                 TextInput::make('price_discount')
-                                    ->label('Phần sau chiết khấu')
+                                    ->label('Chiết khấu sale nhận được')
                                     ->numeric()
-                                    ->readOnly()
+                                    ->default(0)
                                     ->dehydrated()
                                     ->validationMessages([
-                                        'numeric' => 'Phần sau chiết khấu phải là số',
+                                        'numeric' => 'Chiết khấu phải là số',
                                     ]),
                                 TextInput::make('sell_price')
                                     ->label('Giá bán')
                                     ->numeric()
-                                    ->readOnly()
+                                    ->default(0)
                                     ->dehydrated()
                                     ->validationMessages([
                                         'numeric' => 'Giá bán phải là số',
@@ -134,7 +141,7 @@ class ProductForm
                                     ->image()
                                     ->reorderable()
                                     ->disk('public')
-                                    ->directory('product-images')
+                                    ->directory(DirectFile::PRODUCTS->value)
                                     ->minFiles(1)
                                     ->maxFiles(10)
                                     ->columnSpanFull()
@@ -182,10 +189,10 @@ class ProductForm
                                     ->label('Thông số kỹ thuật')
                                     ->schema([
                                         TextInput::make('name')
-                                            ->label('Tên thông số (Ví dụ: RAM, CPU)')
+                                            ->label('Tên thông số')
                                             ->required(),
                                         TextInput::make('value')
-                                            ->label('Giá trị (Ví dụ: 8GB, Core i7)')
+                                            ->label('Giá trị')
                                             ->required(),
                                     ])
                                     ->grid(2)

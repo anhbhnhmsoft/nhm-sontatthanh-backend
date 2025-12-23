@@ -4,7 +4,6 @@ namespace App\Observers;
 
 use App\Enums\UserRole;
 use App\Models\User;
-use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class UserObserver
 {
@@ -13,7 +12,7 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        if ($user->role === UserRole::CTV->value) {
+        if ($user->role == UserRole::CTV->value) {
             $sales = User::where('role', UserRole::SALE->value)->get();
             if ($sales->isNotEmpty()) {
                 $randomSale = $sales->random();

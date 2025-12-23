@@ -2,6 +2,16 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Observers\UserObserver;
+use App\Service\AuthService;
+use App\Service\BrandService;
+use App\Service\ConfigService;
+use App\Service\NewsService;
+use App\Service\ProductService;
+use App\Service\ShowroomService;
+use App\Service\VideoLiveService;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->registerService();
     }
 
     /**
@@ -19,6 +29,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \App\Models\User::observe(\App\Observers\UserObserver::class);
+        $this->registerObserve();
+        if (env('APP_ENV') !== 'local' || env('APP_DEBUG')) { // Chỉ áp dụng cho dev/staging/prod
+            URL::forceScheme('https');
+        }
+    }
+
+    /**
+     * Register services.
+     * @return void
+     */
+    protected function registerService(): void
+    {
+        $this->app->singleton(AuthService::class);
+        $this->app->singleton(ConfigService::class);
+        $this->app->singleton(ShowroomService::class);
+        $this->app->singleton(VideoLiveService::class);
+        $this->app->singleton(ProductService::class);
+        $this->app->singleton(BrandService::class);
+        $this->app->singleton(NewsService::class);
+    }
+
+    protected function registerObserve(): void
+    {
+        User::observe(UserObserver::class);
     }
 }

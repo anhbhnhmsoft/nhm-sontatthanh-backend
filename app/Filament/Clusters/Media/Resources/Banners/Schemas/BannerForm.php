@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Media\Resources\Banners\Schemas;
 
+use App\Enums\DirectFile;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -29,6 +30,7 @@ class BannerForm
                             ->required()
                             ->disk('public')
                             ->image()
+                            ->directory(DirectFile::BANNERS->value)
                             ->maxSize(10240)
                             ->validationMessages([
                                 'required' => 'Vui lòng chọn hình ảnh',
