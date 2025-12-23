@@ -39,7 +39,7 @@ class ShowroomController extends BaseController
             CacheKey::CACHE_SHOWROOM,
             $data,
             null,
-            60 * 60 * 2
+            60 * 60
         );
 
         return $this->sendSuccess(
@@ -49,7 +49,7 @@ class ShowroomController extends BaseController
 
     /**
      * Get showroom detail by ID
-     * Cache strategy: Cache each showroom detail for 2 hours (static data)
+     * Cache strategy: Cache each showroom detail for 1 hours (static data)
      * 
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
@@ -77,7 +77,7 @@ class ShowroomController extends BaseController
         $showroom = $result->getData();
         $data = new ShowroomResource($showroom);
 
-        Caching::setCache(CacheKey::CACHE_SHOWROOM, $data, $cacheKey, 60 * 60 * 2);
+        Caching::setCache(CacheKey::CACHE_SHOWROOM, $data, $cacheKey, 60 * 60);
 
         return $this->sendSuccess(
             data: $data,
@@ -104,7 +104,7 @@ class ShowroomController extends BaseController
         $cameras = $result->getData();
         $data = CameraResource::collection($cameras)->response()->getData(true)['data'];
 
-        Caching::setCache(CacheKey::CACHE_SALE_CAMERA, $data, $user->id, 60 * 60 * 2);
+        Caching::setCache(CacheKey::CACHE_SALE_CAMERA, $data, $user->id, 60 * 60 );
 
         return $this->sendSuccess(
             data: $data,

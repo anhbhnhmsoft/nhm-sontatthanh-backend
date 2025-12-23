@@ -3,12 +3,15 @@
 namespace App\Filament\Clusters\Commerce\Resources\Cameras\Schemas;
 
 use App\Enums\DirectFile;
+use App\Enums\UserRole;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
+use PhpParser\Node\Expr\BinaryOp\Mod;
 
 class CameraForm
 {
@@ -38,32 +41,22 @@ class CameraForm
                                     ->validationMessages([
                                         'required' => 'Showroom không được để trống',
                                     ]),
+                                TextInput::make('security_code')
+                                    ->label('Mã bảo mật')
+                                    ->maxLength(255)
+                                    ->validationMessages([
+                                        'maxLength' => 'Mã bảo mật không được vượt quá 255 ký tự',
+                                    ]),
                                 TextInput::make('device_id')
-                                    ->label('Thiết bị')
+                                    ->label('Số serial thiết bị')
                                     ->required()
                                     ->maxLength(255)
                                     ->validationMessages([
                                         'required' => 'Thiết bị không được để trống',
                                         'maxLength' => 'Thiết bị không được vượt quá 255 ký tự',
                                     ]),
-                                Select::make('channel_id')
-                                    ->label('Kênh')
-                                    ->required()
-                                    ->options([
-                                        0 => 'Kênh 0',
-                                        1 => 'Kênh 1',
-                                    ])
-                                    ->validationMessages([
-                                        'required' => 'Kênh không được để trống',
-                                    ]),
-                                TextInput::make('device_model')
-                                    ->label('Model')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->validationMessages([
-                                        'required' => 'Model không được để trống',
-                                        'maxLength' => 'Model không được vượt quá 255 ký tự',
-                                    ]),
+                                TextInput::make('channel_id')
+                                    ->label('Số kênh ~ số mắt của thiết bị'),
                                 FileUpload::make('image')
                                     ->disk('public')
                                     ->directory(DirectFile::CAMERAS->value)
@@ -74,7 +67,18 @@ class CameraForm
                                     ])
                                     ->columnSpan('full')
                                     ->label('Hình ảnh')
-                            ])
+                            ]),
+                        Select::make('users')
+                            ->label('Danh sách người được truy cập')
+                            ->multiple()
+                            ->preload()
+                            ->relationship(
+                                name: 'users',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn(Builder $query, $livewire) => $query
+                                    ->where('role', UserRole::SALE->value)
+                            )
+                            ->columnSpanFull(),
                     ])
                     ->columnSpan('full'),
             ]);

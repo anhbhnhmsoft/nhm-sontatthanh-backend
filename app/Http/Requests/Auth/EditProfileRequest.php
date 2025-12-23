@@ -18,6 +18,11 @@ class EditProfileRequest extends FormRequest
         return [
             'name' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'phone' => [
+                'nullable',
+                'string',
+                'regex:/^(0|\+84)[35789][0-9]{8}$/'
+            ],
             'old_password' => 'nullable|string|min:6',
             'new_password' => 'nullable|string|min:6',
             'email' => 'nullable|email',
@@ -27,7 +32,6 @@ class EditProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Vui lòng nhập tên',
             'name.max' => 'Tên không được vượt quá 255 ký tự',
             'avatar.image' => 'Ảnh đại diện phải là file ảnh',
             'avatar.mimes' => 'Ảnh đại diện phải là file ảnh có định dạng jpeg, png, jpg, gif',
@@ -35,6 +39,7 @@ class EditProfileRequest extends FormRequest
             'old_password.min' => 'Mật khẩu cũ phải có ít nhất 6 ký tự',
             'new_password.min' => 'Mật khẩu mới phải có ít nhất 6 ký tự',
             'email.email' => 'Email không hợp lệ',
+            'phone.regex' => 'Số điện thoại không đúng định dạng',
         ];
     }
 

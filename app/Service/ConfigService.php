@@ -22,7 +22,7 @@ class ConfigService extends BaseService
         try {
             $configs = $this->config->all();
             if ($configs->isEmpty()) {
-                throw new ServiceException('Không tìm thấy cấu hình');
+                return ServiceReturn::error('Không tìm thấy cấu hình');
             }
             return ServiceReturn::success(data: $configs);
         } catch (ServiceException $th) {
@@ -55,7 +55,7 @@ class ConfigService extends BaseService
                 Caching::setCache(CacheKey::CACHE_CONFIG_KEY, $config->toArray(), $key->value, self::TIME_CACHE);
                 return ServiceReturn::success(data: $config->toArray());
             }
-            throw new ServiceException('Không tìm thấy cấu hình');
+            return ServiceReturn::error('Không tìm thấy cấu hình');
         } catch (\Throwable $th) {
             LogHelper::debug(message: $th->getMessage());
             return ServiceReturn::error(message: $th->getMessage());
@@ -67,6 +67,7 @@ class ConfigService extends BaseService
         try {
             // Chuẩn bị dữ liệu cho phương thức upsert
             $dataToUpdate = collect($values)->map(function ($value, $key) {
+                Caching::deleteCache(CacheKey::CACHE_CONFIG_KEY, $key);
                 return [
                     'config_key' => $key,
                     'config_value' => $value,

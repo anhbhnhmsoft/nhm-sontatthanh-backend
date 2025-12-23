@@ -41,7 +41,7 @@ class BrandController extends BaseController
             CacheKey::CACHE_BRAND,
             $data,
             null,
-            60 * 60 * 2
+            60 * 60
         );
 
         return $this->sendSuccess(
@@ -73,7 +73,7 @@ class BrandController extends BaseController
             CacheKey::CACHE_BANNER,
             $data,
             null,
-            60 * 60 * 2
+            60 * 60
         );
 
         return $this->sendSuccess(
@@ -106,7 +106,7 @@ class BrandController extends BaseController
             CacheKey::CACHE_LINE,
             $data,
             null,
-            60 * 60 * 2
+            60 * 60
         );
 
         return $this->sendSuccess(

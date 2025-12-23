@@ -8,9 +8,11 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Service\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends BaseController
@@ -154,6 +156,8 @@ class AuthController extends BaseController
             $request->validated('avatar'),
             $request->validated('old_password'),
             $request->validated('new_password'),
+            $request->validated('email'),
+            $request->validated('phone'),
         );
 
         if ($result->isError()) {
@@ -163,6 +167,130 @@ class AuthController extends BaseController
         }
 
         return $this->sendSuccess(
+            data: [
+                'user' => UserResource::make(Auth::user()),
+            ],
+            message: $result->getMessage()
+        );
+    }
+
+    /**
+     * Quên mật khẩu
+     */
+    /**
+     * Gửi OTP quên mật khẩu
+     */
+    public function sendForgotPasswordOtp(ResendOtpRequest $request): JsonResponse
+    {
+        $result = $this->authService->sendForgotPasswordOtp(
+            $request->validated('phone')
+        );
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+            );
+        }
+
+        return $this->sendSuccess(
+            $result->getMessage()
+        );
+    }
+
+    /**
+     * Xác thực OTP quên mật khẩu
+     */
+    public function verifyForgotPasswordOtp(VerifyOtpRequest $request): JsonResponse
+    {
+        $result = $this->authService->verifyForgotPasswordOtp(
+            $request->validated('phone'),
+            $request->validated('otp')
+        );
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+            );
+        }
+
+        $token = $result->getData()['reset_token'];
+        return $this->sendSuccess(
+            [
+                'reset_token' => $token,
+            ],
+            $result->getMessage()
+        );
+    }
+
+    /**
+     * Quên mật khẩu
+     */
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $result = $this->authService->forgotPassword(
+            $request->validated('phone'),
+            $request->validated('password'),
+            $request->validated('token'),
+        );
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+            );
+        }
+
+        return $this->sendSuccess(
+            $result->getMessage()
+        );
+    }
+
+    /**
+     * Xác thực bằng Zalo (Unified Login/Register)
+     * Supports both:
+     * - access_token: Direct token from mobile (deprecated)
+     * - code: OAuth authorization code (recommended)
+     */
+    public function zaloAuthenticate(Request $request): JsonResponse
+    {
+        $request->validate([
+            'access_token' => 'required_without:code|string',
+            'code' => 'required_without:access_token|string',
+        ], [
+            'access_token.required_without' => 'Access token hoặc code không được để trống',
+            'code.required_without' => 'Access token hoặc code không được để trống',
+        ]);
+
+        $accessToken = $request->input('access_token');
+        $code = $request->input('code');
+
+        // If code is provided, exchange it for access_token
+        if ($code && !$accessToken) {
+            $accessToken = $this->authService->getAccessTokenFromCode($code);
+            if (!$accessToken) {
+                return $this->sendError(
+                    'Không thể lấy access token từ Zalo',
+                    400,
+                );
+            }
+        }
+
+        $result = $this->authService->authenticateWithZalo($accessToken);
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+                400,
+            );
+        }
+
+        $user = $result->getData()['user'];
+        $token = $result->getData()['token'];
+
+        return $this->sendSuccess(
+            [
+                'user' => UserResource::make($user),
+                'token' => $token,
+            ],
             $result->getMessage()
         );
     }

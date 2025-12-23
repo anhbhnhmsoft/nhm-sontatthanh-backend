@@ -87,13 +87,25 @@
   - `device_id` (string, nullable, unique) — SN (Serial Number)
   - `image` (string, nullable) — Hình ảnh mặc định camera
   - `channel_id` (unsignedTinyInteger, default 0, nullable) — Thường = 0
-  - `device_model` (string, nullable) — Model camera
   - `bind_status` (boolean, default false) — 0/1 – bind status ~ bind này là bind và account developer chưa bind camera
   - `is_active` (boolean, default false) — 0/1 – active status ~ trạng thái cho phép truy cập ở mobile
   - `enable` (boolean, default false) — 0/1 – enable status ~ trạng thái thực tế của camera
   - `description` (string(255), nullable)
   - `showroom_id` (FK, nullable) → `showrooms.id`, nullOnDelete, index
+  - `security_code` (string, nullable) — Mã bảo mật
   - `deleted_at` (soft deletes) 
+  - `created_at`, `updated_at`
+
+### `channels`
+
+- Mô tả: Mỗi mắt hoặc 1 luồng stream của camera được xem là 1 kênh
+- Cấu trúc:
+  - `id`
+  - `camera_id` (string, nullable)
+  - `status` (boolean, default true) — Trạng thái
+  - `name` (string, nullable)
+  - `position` (unsignedTinyInteger, default 0) — Vị trí
+  - `deleted_at` (soft deletes)
   - `created_at`, `updated_at`
 
 ### `brands`
@@ -213,5 +225,19 @@
     -   `image` (string, nullable)
     -   `is_active` (boolean, default true) — index
     -   `position` (unsignedTinyInteger, default 0)
+    -   `deleted_at` (soft deletes)
+    -   `updated_at`, `created_at`
+
+### `user_devices` 
+
+-   Bảng lưu lại thông tin thiết bị của người dùng nhằm gửi thông báo
+-   Cấu trúc:
+    -   `id`
+    -   `user_id` (foreignId, nullable) — tham chiếu `users.id`, `nullOnDelete()`, index
+    -   `expo_push_token` (string, nullable)
+    -   `device_id` (string, nullable)
+    -   `device_type` (string, nullable)
+    -   `last_seen_at` (timestamp, nullable)
+    -   `is_active` (boolean, default true) — index
     -   `deleted_at` (soft deletes)
     -   `updated_at`, `created_at`

@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Ho_Chi_Minh',
 
     /*
     |--------------------------------------------------------------------------
@@ -104,6 +104,18 @@ return [
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
         ),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mobile App Deeplink Scheme
+    |--------------------------------------------------------------------------
+    |
+    | This value is used for redirecting users back to the mobile app
+    | after web-based authentication (e.g., Zalo OAuth).
+    |
+    */
+
+    'mobile_deeplink_scheme' => env('MOBILE_DEEPLINK_SCHEME', 'nhmapp'),
 
     /*
     |--------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Organization\Resources\Departments\Schemas;
 
+use App\Enums\UserRole;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -24,7 +25,11 @@ class DepartmentForm
                                 'max_length' => 'Tên phòng ban không được vượt quá 255 ký tự',
                             ]),
                         Select::make('users')
-                            ->relationship('users', 'name')
+                            ->relationship(
+                                name: 'users',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn($query) => $query->where('role', UserRole::SALE->value)
+                            )
                             ->multiple()
                             ->label('Người dùng'),
                     ])
