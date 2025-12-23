@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Zalo\Zalo;
 use Zalo\ZaloEndPoint;
+use App\Core\Helper;
+use Illuminate\Support\Str;
 
 class ZaloService extends BaseService
 {
@@ -64,25 +66,46 @@ class ZaloService extends BaseService
     public function getAuthorizationUrl(): ?string
     {
         try {
-            $callbackUrl = config('app.url') . '/auth/zalo/callback';
-            $appId = $this->configService->getConfigByKey(ConfigKey::APP_ID_ZALO);
+            $callbackUrl = route('zalo.callback');
 
-            if ($appId->isError()) {
+            $appIdConfig = $this->configService->getConfigByKey(ConfigKey::APP_ID_ZALO);
+            if ($appIdConfig->isError()) {
                 LogHelper::error('Cannot get Zalo App ID from config');
                 return null;
             }
 
-            $params = [
-                'app_id' => $appId->getData()['config_value'],
-                'redirect_uri' => $callbackUrl,
-            ];
+            $appId = $appIdConfig->getData()['config_value'];
+            // PKCE
+            $codeVerifier  = Helper::generateCodeVerifier();
+            $codeChallenge = Helper::generateCodeChallenge($codeVerifier);
 
-            return 'https://oauth.zaloapp.com/v4/permission?' .     ($params);
-        } catch (\Exception $e) {
+            // State để map verifier
+            $state = Str::uuid()->toString();
+            // Lưu verifier + state (session hoặc cache)
+            dd($state);
+            session([
+                'zalo_oauth.' . $state => [
+                    'code_verifier' => $codeVerifier,
+                    'created_at' => now(),
+                ]
+            ]);
+
+            $params = [
+                'app_id' => $appId,
+                'redirect_uri' => $callbackUrl,
+                'state' => $state,
+                'code_challenge' => $codeChallenge,
+                'code_challenge_method' => 'S256',
+            ];
+            dd('https://oauth.zaloapp.com/v4/permission?' . http_build_query($params));
+            return 'https://oauth.zaloapp.com/v4/permission?' . http_build_query($params);
+        } catch (\Throwable $e) {
             LogHelper::error('Zalo Authorization URL Exception: ' . $e->getMessage());
             return null;
         }
     }
+
+
 
     /**
      * Exchange authorization code for access token

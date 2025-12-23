@@ -40,4 +40,22 @@ final class Helper
         return Str::random(60);
     }
 
+    public static function generateCodeVerifier(): string
+    {
+        return bin2hex(random_bytes(32)); // ~64 ký tự (OK > 43)
+    }
+
+    public static function generateCodeChallenge(string $codeVerifier): string
+    {
+        return rtrim(
+            strtr(
+                base64_encode(hash('sha256', $codeVerifier, true)),
+                '+/',
+                '-_'
+            ),
+            '='
+        );
+    }
+
+
 }
