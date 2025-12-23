@@ -77,7 +77,7 @@ class ZaloService extends BaseService
                 'redirect_uri' => $callbackUrl,
             ];
 
-            return 'https://oauth.zaloapp.com/v4/permission?' . http_build_query($params);
+            return 'https://oauth.zaloapp.com/v4/permission?' .     ($params);
         } catch (\Exception $e) {
             LogHelper::error('Zalo Authorization URL Exception: ' . $e->getMessage());
             return null;

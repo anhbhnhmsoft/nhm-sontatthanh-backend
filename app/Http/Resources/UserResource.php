@@ -43,9 +43,9 @@ class UserResource extends JsonResource
             $showroom = null;
             $collaborators = null;
             $sale = [
-                'id' => (string) $this->sale->id ?? null,
-                'name' => $this->sale->name ?? null,
-                'phone' => $this->sale->phone ?? null,
+                'id' => (string) $this->sale?->id ?? null,
+                'name' => $this->sale?->name ?? null,
+                'phone' => $this->sale?->phone ?? null,
             ];
         }
         return [
