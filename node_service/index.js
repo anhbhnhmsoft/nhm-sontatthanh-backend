@@ -47,3 +47,4 @@ app.post('/send-notification', middlewareCheckApiKey, async (req, res) => {
 app.listen(nodeConfig.PORT_NODE_SERVER, () => {
     console.log(`🚀 Node.js Notification Service running at http://localhost:${nodeConfig.PORT_NODE_SERVER}`);
 });
+    

@@ -42,10 +42,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerObserve();
-        if (env('APP_ENV') !== 'local' || env('APP_DEBUG')) { 
-            URL::forceScheme('http');
-        }
+
     }
 
     /**

@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Zalo\Zalo;
 use Zalo\ZaloEndPoint;
+use App\Core\Helper;
+use Illuminate\Support\Str;
+use Zalo\Util\PKCEUtil;
 
 class ZaloService extends BaseService
 {
@@ -64,29 +67,31 @@ class ZaloService extends BaseService
     public function getAuthorizationUrl(): ?string
     {
         try {
-            $callbackUrl = config('app.url') . '/auth/zalo/callback';
-            $appId = $this->configService->getConfigByKey(ConfigKey::APP_ID_ZALO);
+            $callbackUrl = route('zalo.callback');
 
-            if ($appId->isError()) {
+            $appIdConfig = $this->configService->getConfigByKey(ConfigKey::APP_ID_ZALO);
+            if ($appIdConfig->isError()) {
                 LogHelper::error('Cannot get Zalo App ID from config');
                 return null;
             }
-
-            $params = [
-                'app_id' => $appId->getData()['config_value'],
-                'redirect_uri' => $callbackUrl,
-            ];
-
-            return 'https://oauth.zaloapp.com/v4/permission?' . http_build_query($params);
-        } catch (\Exception $e) {
+            $helper = $this->zalo->getRedirectLoginHelper();
+            $codeVerifier = PKCEUtil::genCodeVerifier();
+            $codeChallenge = PKCEUtil::genCodeChallenge($codeVerifier);
+            $callbackUrl = route('zalo.callback');
+            $state = 'LIJg08JUUf1uwwHv';
+            $linkOAGrantPermission2App = $helper->getLoginUrl($callbackUrl, $codeChallenge, $state);
+            return $linkOAGrantPermission2App;
+        } catch (\Throwable $e) {
             LogHelper::error('Zalo Authorization URL Exception: ' . $e->getMessage());
             return null;
         }
     }
 
+
+
     /**
      * Exchange authorization code for access token
-     * @param string $code
+     * @param string $code`
      * @return string|null
      */
     public function getAccessTokenFromCode(string $code): ?string
@@ -104,9 +109,11 @@ class ZaloService extends BaseService
             $appSecret = $secretRes->getData()['config_value'];
             $callbackUrl = config('app.url') . '/auth/zalo/callback';
 
-            $response = Http::asForm()->post('https://oauth.zaloapp.com/v4/access_token', [
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'secret_key' => $appSecret,
+            ])->asForm()->post('https://oauth.zaloapp.com/v4/access_token', [
                 'app_id' => $appId,
-                'app_secret' => $appSecret,
                 'code' => $code,
                 'grant_type' => 'authorization_code',
             ]);
