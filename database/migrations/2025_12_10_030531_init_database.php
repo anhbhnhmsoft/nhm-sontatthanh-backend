@@ -123,6 +123,7 @@ return new class extends Migration
             $table->foreignId('camera_id')->constrained('cameras')->cascadeOnDelete();
             $table->tinyInteger('status')->comment('Trạng thái');
             $table->string('name')->comment('Tên kênh');
+            $table->tinyInteger('position')->comment('Vị trí kênh');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -199,8 +200,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Tên người dùng')->index();
             $table->string('email')->unique()->nullable();
-            $table->string('phone')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('phone')->unique()->nullable();
+            $table->timestamp('email_verified_at')->nullable(); 
             $table->timestamp('phone_verified_at')->nullable();
             $table->string('avatar')->nullable();
             $table->string('referral_code', 40)->nullable()->index();
@@ -210,7 +211,9 @@ return new class extends Migration
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban');
             $table->foreignId('showroom_id')->nullable()->constrained('showrooms')->nullOnDelete()->comment('Showroom làm việc');
             $table->unsignedBigInteger('sale_id')->nullable()->comment('Người bán quản lý - tham chiếu đến user khác');
-            $table->string('password');
+            $table->string('password')->nullable();
+            $table->string('zalo_id')->nullable()->unique()->after('id');
+
             $table->rememberToken();
             $table->softDeletes();
             $table->timestamps();
@@ -332,6 +335,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('data')->nullable();
             $table->timestamp('read_at')->nullable();
+            $table->tinyInteger('status')->default(0);
             $table->timestamps();
         });
 

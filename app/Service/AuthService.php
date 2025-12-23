@@ -48,7 +48,7 @@ class AuthService extends BaseService
             $avatarUrl = $zaloProfile['avatar'] ?? null;
 
             $user = $this->userModel->where('zalo_id', $zaloId)->first();
-            if (!$user) {    
+            if (!$user) {
                 $user = $this->userModel->create([
                     'zalo_id' => $zaloId,
                     'phone' => null,
@@ -74,6 +74,16 @@ class AuthService extends BaseService
             LogHelper::error('AuthService@authenticateWithZalo error: ' . $th->getMessage());
             return ServiceReturn::error('Có lỗi xảy ra khi xác thực Zalo');
         }
+    }
+
+    /**
+     * Get access token from Zalo authorization code
+     * @param string $code
+     * @return string|null
+     */
+    public function getAccessTokenFromCode(string $code): ?string
+    {
+        return $this->zaloService->getAccessTokenFromCode($code);
     }
 
     /**
@@ -219,7 +229,7 @@ class AuthService extends BaseService
             // nếu block
             if ($isBlocked) {
                 return ServiceReturn::error(
-                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' .( $this->blockTime / 60 ) . ' phút.'
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . ($this->blockTime / 60) . ' phút.'
                 );
             }
             // Lấy OTP đã gửi để kiểm tra
@@ -270,7 +280,7 @@ class AuthService extends BaseService
             // nếu block
             if ($isBlocked) {
                 return ServiceReturn::error(
-                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' .( $this->blockTime / 60 ) . ' phút.'
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . ($this->blockTime / 60) . ' phút.'
                 );
             }
             // xác định số lần gửi otp
@@ -535,7 +545,7 @@ class AuthService extends BaseService
             // nếu block
             if ($isBlocked) {
                 return ServiceReturn::error(
-                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' .( $this->blockTime / 60 ) . ' phút.'
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . ($this->blockTime / 60) . ' phút.'
                 );
             }
             // Lấy OTP đã gửi để kiểm tra
@@ -586,7 +596,7 @@ class AuthService extends BaseService
             // nếu block
             if ($isBlocked) {
                 return ServiceReturn::error(
-                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' .($this->blockTime / 60). ' phút.'
+                    'Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau ' . ($this->blockTime / 60) . ' phút.'
                 );
             }
             // xác định số lần gửi otp
@@ -597,7 +607,7 @@ class AuthService extends BaseService
                     key: CacheKey::CACHE_KEY_OTP_FORGOT_PASSWORD_BLOCK,
                     value: true,
                     uniqueKey: $phone,
-                    expire: $this->blockTime , // phút -> giây
+                    expire: $this->blockTime, // phút -> giây
                 );
 
                 return ServiceReturn::error('Đã gửi quá số lần cho phép');

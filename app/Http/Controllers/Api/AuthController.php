@@ -246,18 +246,35 @@ class AuthController extends BaseController
 
     /**
      * Xác thực bằng Zalo (Unified Login/Register)
+     * Supports both:
+     * - access_token: Direct token from mobile (deprecated)
+     * - code: OAuth authorization code (recommended)
      */
     public function zaloAuthenticate(Request $request): JsonResponse
     {
         $request->validate([
-            'access_token' => 'required|string',
-        ],[
-            'access_token.required' => 'Access token không được để trống',
+            'access_token' => 'required_without:code|string',
+            'code' => 'required_without:access_token|string',
+        ], [
+            'access_token.required_without' => 'Access token hoặc code không được để trống',
+            'code.required_without' => 'Access token hoặc code không được để trống',
         ]);
 
-        $result = $this->authService->authenticateWithZalo(
-            $request->input('access_token'),
-        );
+        $accessToken = $request->input('access_token');
+        $code = $request->input('code');
+
+        // If code is provided, exchange it for access_token
+        if ($code && !$accessToken) {
+            $accessToken = $this->authService->getAccessTokenFromCode($code);
+            if (!$accessToken) {
+                return $this->sendError(
+                    'Không thể lấy access token từ Zalo',
+                    400,
+                );
+            }
+        }
+
+        $result = $this->authService->authenticateWithZalo($accessToken);
 
         if ($result->isError()) {
             return $this->sendError(
