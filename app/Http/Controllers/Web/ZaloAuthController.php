@@ -37,12 +37,23 @@ class ZaloAuthController extends BaseController
     public function callback(Request $request)
     {
         $code = $request->query('code');
+        $state = $request->query('state');
         $error = $request->query('error');
 
         // Nếu user từ chối
         if ($error) {
             Log::warning('Zalo OAuth Error: ' . $error);
             return $this->redirectToMobileApp(null, 'Bạn đã từ chối đăng nhập với Zalo');
+        }
+
+        // Validate state to prevent CSRF attacks
+        $expectedState = session('zalo_oauth_state');
+        if (!$state || !$expectedState || $state !== $expectedState) {
+            Log::warning('Zalo OAuth State Mismatch', [
+                'expected' => $expectedState,
+                'received' => $state
+            ]);
+            return $this->redirectToMobileApp(null, 'Xác thực không hợp lệ. Vui lòng thử lại.');
         }
 
         // Nếu không có code
