@@ -12,6 +12,7 @@ use Zalo\Zalo;
 use Zalo\ZaloEndPoint;
 use App\Core\Helper;
 use Illuminate\Support\Str;
+use Zalo\Util\PKCEUtil;
 
 class ZaloService extends BaseService
 {
@@ -73,32 +74,13 @@ class ZaloService extends BaseService
                 LogHelper::error('Cannot get Zalo App ID from config');
                 return null;
             }
-
-            $appId = $appIdConfig->getData()['config_value'];
-            // PKCE
-            $codeVerifier  = Helper::generateCodeVerifier();
-            $codeChallenge = Helper::generateCodeChallenge($codeVerifier);
-
-            // State để map verifier
-            $state = Str::uuid()->toString();
-            // Lưu verifier + state (session hoặc cache)
-            dd($state);
-            session([
-                'zalo_oauth.' . $state => [
-                    'code_verifier' => $codeVerifier,
-                    'created_at' => now(),
-                ]
-            ]);
-
-            $params = [
-                'app_id' => $appId,
-                'redirect_uri' => $callbackUrl,
-                'state' => $state,
-                'code_challenge' => $codeChallenge,
-                'code_challenge_method' => 'S256',
-            ];
-            dd('https://oauth.zaloapp.com/v4/permission?' . http_build_query($params));
-            return 'https://oauth.zaloapp.com/v4/permission?' . http_build_query($params);
+            $helper = $this->zalo->getRedirectLoginHelper();
+            $codeVerifier = PKCEUtil::genCodeVerifier();
+            $codeChallenge = PKCEUtil::genCodeChallenge($codeVerifier);
+            $callbackUrl = route('zalo.callback');
+            $state = 'LIJg08JUUf1uwwHv';
+            $linkOAGrantPermission2App = $helper->getLoginUrl($callbackUrl, $codeChallenge, $state);
+            return $linkOAGrantPermission2App;
         } catch (\Throwable $e) {
             LogHelper::error('Zalo Authorization URL Exception: ' . $e->getMessage());
             return null;
@@ -109,7 +91,7 @@ class ZaloService extends BaseService
 
     /**
      * Exchange authorization code for access token
-     * @param string $code
+     * @param string $code`
      * @return string|null
      */
     public function getAccessTokenFromCode(string $code): ?string
@@ -132,7 +114,6 @@ class ZaloService extends BaseService
                 'secret_key' => $appSecret,
             ])->asForm()->post('https://oauth.zaloapp.com/v4/access_token', [
                 'app_id' => $appId,
-                'app_secret' => $appSecret,
                 'code' => $code,
                 'grant_type' => 'authorization_code',
             ]);
