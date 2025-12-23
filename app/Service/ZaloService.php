@@ -127,7 +127,10 @@ class ZaloService extends BaseService
             $appSecret = $secretRes->getData()['config_value'];
             $callbackUrl = config('app.url') . '/auth/zalo/callback';
 
-            $response = Http::asForm()->post('https://oauth.zaloapp.com/v4/access_token', [
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'secret_key' => $appSecret,
+            ])->asForm()->post('https://oauth.zaloapp.com/v4/access_token', [
                 'app_id' => $appId,
                 'app_secret' => $appSecret,
                 'code' => $code,
