@@ -43,22 +43,22 @@ class UserResource extends JsonResource
             $showroom = null;
             $collaborators = null;
             $sale = [
-                'id' => (string) $this->sale->id,
-                'name' => $this->sale->name,
-                'phone' => $this->sale->phone,
+                'id' => (string) $this->sale->id ?? null,
+                'name' => $this->sale->name ?? null,
+                'phone' => $this->sale->phone ?? null,
             ];
         }
         return [
-            'id' => (string) $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
-            'phone' => $this->phone,
+            'id' => (string) $this->id ?? null,
+            'name' => $this->name ?? null,
+            'email' => $this->email ?? null,
+            'phone' => $this->phone ?? null,
             'avatar' => (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) ? $this->avatar : ($this->avatar ? Storage::disk('public')->url($this->avatar) : null),
-            'referral_code' => $this->referral_code,
+            'referral_code' => $this->referral_code ?? null,
             'role' => $this->role,
             'joined_at' => $this->joined_at,
             'is_active' => $this->is_active,
-            'department_id' => $this->department_id,
+            'department_id' => $this->department_id ?? null,
             'department' =>  $department ?? null,
             'showroom' => $showroom ?? null,
             'manage_sale' => $collaborators ?? null,
