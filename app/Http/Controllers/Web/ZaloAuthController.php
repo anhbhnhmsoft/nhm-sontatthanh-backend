@@ -84,34 +84,53 @@ class ZaloAuthController extends BaseController
 
     /**
      * Redirect to mobile app via deeplink
+     * 
+     * @param string|null $token Authentication token if successful
+     * @param string $message Message to display to user
+     * @param mixed $user User object if authentication successful
+     * @return \Illuminate\View\View
      */
     protected function redirectToMobileApp(?string $token, string $message, $user = null)
     {
-        // Deep link format: myapp://auth/zalo?token=xxx&message=xxx
+        // Deep link format: nhmapp://auth/zalo?token=xxx&message=xxx
         $deeplink = config('app.mobile_deeplink_scheme', 'nhmapp') . '://auth/zalo';
 
         $params = [
             'message' => $message,
+            'timestamp' => now()->timestamp,
         ];
 
         if ($token) {
             $params['token'] = $token;
             $params['success'] = 'true';
+
             if ($user) {
                 $params['user_id'] = $user->id;
-                $params['user_name'] = $user->name;
+                $params['user_name'] = urlencode($user->name);
             }
+
+            Log::info('Zalo authentication successful', [
+                'user_id' => $user->id ?? null,
+                'user_name' => $user->name ?? null,
+            ]);
         } else {
             $params['success'] = 'false';
+            $params['error'] = urlencode($message);
+
+            Log::warning('Zalo authentication failed', [
+                'message' => $message,
+            ]);
         }
 
         $deeplink .= '?' . http_build_query($params);
 
-        // Tạo HTML redirect page với fallback
+        // Return view with all necessary data
         return view('zalo-callback', [
             'deeplink' => $deeplink,
             'success' => $token !== null,
             'message' => $message,
+            'user' => $user,
+            'token' => $token,
         ]);
     }
 }
