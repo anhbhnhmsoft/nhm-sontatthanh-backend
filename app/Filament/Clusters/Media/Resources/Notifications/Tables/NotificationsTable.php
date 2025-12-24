@@ -37,9 +37,7 @@ class NotificationsTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
+            ->defaultSort('created_at', 'desc')
             ->recordActions([
                 ViewAction::make(),
             ])
