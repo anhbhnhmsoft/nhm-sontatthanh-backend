@@ -3,23 +3,15 @@
 namespace App\Models;
 
 use App\Core\GenerateId\HasBigIntId;
-use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Filament\Panel;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasBigIntId, SoftDeletes, HasApiTokens;
-
-
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return true;
-    }
 
     /**
      * The attributes that are mass assignable.
@@ -27,7 +19,6 @@ class User extends Authenticatable implements FilamentUser
      * @var list<string>
      */
     protected $fillable = [
-        'zalo_id',
         'name',
         'email',
         'phone',
@@ -37,7 +28,6 @@ class User extends Authenticatable implements FilamentUser
         'joined_at',
         'is_active',
         'department_id',
-        'showroom_id',
         'password',
         'email_verified_at',
         'phone_verified_at',
@@ -86,13 +76,8 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Camera::class, 'camera_user')->withTimestamps();
     }
 
-    public function collaborators()
+    public function managedSales()
     {
         return $this->hasMany(User::class, 'sale_id');
-    }
-
-    public function showroom()
-    {
-        return $this->belongsTo(Showroom::class, 'showroom_id');
     }
 }

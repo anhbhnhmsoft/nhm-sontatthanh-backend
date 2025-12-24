@@ -101,32 +101,19 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Tên camera')->index();
             $table->string('device_id')->nullable()->comment('SN – bắt buộc')->unique();
-            $table->unsignedTinyInteger('channel_id')->default(0)->nullable()->comment('số luồng camera ~ số luồng stream được ~ số  mắt của thiết bị: 0 ~ 1 mắt và tăng dần 1 ~ 2 mắt 2 luồng ');
+            $table->unsignedTinyInteger('channel_id')->default(0)->nullable()->comment('Thường = 0');
             $table->string('image')->nullable()->comment('Hình ảnh mặc định camera');
-            $table->boolean('bind_status')->default(false)->comment('0/1 – bind hay chưa - bind này là bind và account developer chưa ');
-            $table->boolean('is_active')->default(false)->comment('0/1 – active hay chưa - active để dừng trả ra dữ liệu cho phé mobile truy cập');
-            $table->boolean('enable')->default(false)->comment('0/1 – enable hay chưa ~ enable là trạng thái thực tế của camera, còn sử dụng được hay không');
+            $table->string('device_model')->nullable()->comment('Model camera');
+            $table->boolean('bind_status')->default(false)->comment('0/1 – bind hay chưa');
+            $table->boolean('is_active')->default(false)->comment('0/1 – active hay chưa');
+            $table->boolean('enable')->default(false)->comment('0/1 – enable hay chưa');
             $table->string('description', 255)->nullable()->comment('Mô tả camera');
             $table->foreignId('showroom_id')->nullable()->constrained('showrooms')->nullOnDelete()->comment('Cửa hàng trưng bày')->index();
-            $table->string('security_code')->nullable()->comment('Mã bảo mật');
             $table->softDeletes();
             $table->timestamps();
         });
 
-        /**
-         * Bảng channels
-         * note: bảng kênh video
-         */
-        Schema::create('channels', function (Blueprint $table) {
-            $table->id();
-            $table->comment('Kênh video của camera');
-            $table->foreignId('camera_id')->constrained('cameras')->cascadeOnDelete();
-            $table->tinyInteger('status')->comment('Trạng thái');
-            $table->string('name')->comment('Tên kênh');
-            $table->tinyInteger('position')->comment('Vị trí kênh');
-            $table->softDeletes();
-            $table->timestamps();
-        });
+
         /**
          * Bảng brands 
          * note: bảng thương hiệu sản phẩm
@@ -200,20 +187,17 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Tên người dùng')->index();
             $table->string('email')->unique()->nullable();
-            $table->string('phone')->unique()->nullable();
-            $table->timestamp('email_verified_at')->nullable(); 
+            $table->string('phone')->unique();
+            $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
             $table->string('avatar')->nullable();
             $table->string('referral_code', 40)->nullable()->index();
             $table->unsignedTinyInteger('role')->default(0)->comment('Vai trò người dùng trong enum UserRole')->index();
             $table->timestamp('joined_at')->default(now())->comment('Thời gian tham vào công ty ~ thời gian bắt đầu sử dụng hệ thống');
             $table->boolean('is_active')->default(true)->comment('Trạng thái người dùng ~ lock / unlock - tính năng khóa tài khoản')->index(); // Index: Lọc theo trạng thái
-            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban');
-            $table->foreignId('showroom_id')->nullable()->constrained('showrooms')->nullOnDelete()->comment('Showroom làm việc');
+            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete()->comment('Phòng ban')->index();
             $table->unsignedBigInteger('sale_id')->nullable()->comment('Người bán quản lý - tham chiếu đến user khác');
-            $table->string('password')->nullable();
-            $table->string('zalo_id')->nullable()->unique()->after('id');
-
+            $table->string('password');
             $table->rememberToken();
             $table->softDeletes();
             $table->timestamps();
@@ -328,26 +312,11 @@ return new class extends Migration
         });
 
         Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('type');
-            $table->foreignId('user_id')->constrained('users')->nullOnDelete();
-            $table->string('title')->nullable();
-            $table->text('description')->nullable();
-            $table->text('data')->nullable();
+            $table->morphs('notifiable');
+            $table->text('data');
             $table->timestamp('read_at')->nullable();
-            $table->tinyInteger('status')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('user_devices', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('expo_push_token')->unique();
-            $table->string('device_id')->nullable();
-            $table->string('device_type', 20)->nullable();
-            $table->dateTime('last_seen_at')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -379,15 +348,12 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('personal_access_tokens');
-        Schema::dropIfExists('user_devices');   
-        Schema::dropIfExists('notifications');
 
         // Custom Schema - Xóa theo thứ tự phụ thuộc (bảng con trước, bảng cha sau)
 
         // Bảng có khóa ngoại tham chiếu đến users, cameras, products, departments, showrooms, brands, lines
-        Schema::dropIfExists('channels');
         Schema::dropIfExists('news'); // Tham chiếu đến users
-        Schema::dropIfExists('banners');
+        Schema::dropIfExists('banners'); 
         Schema::dropIfExists('camera_user'); // Tham chiếu đến users và cameras
         Schema::dropIfExists('products'); // Tham chiếu đến brands và lines (product_images đã được merge vào products)
         Schema::dropIfExists('cameras'); // Tham chiếu đến showrooms

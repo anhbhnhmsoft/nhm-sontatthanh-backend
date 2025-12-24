@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ConfigKey;
 use App\Enums\UserRole;
 use App\Enums\ConfigType;
 use App\Models\Config;
@@ -25,9 +24,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Run additional seed routines (skip in production)
-        $this->seedProvince();
+        // $this->seedProvince();
         $this->seedAdmin();
-        // $this->seedConfig();
+        $this->seedConfig();
     }
 
     private function seedProvince()
@@ -129,26 +128,14 @@ class DatabaseSeeder extends Seeder
         try {
             $configs = [
                 [
-                    'config_key' => ConfigKey::APP_ID->value,
-                    'config_value' => 'lc2656073ffb5d4b19',
+                    'config_key' => 'APP_ID',
+                    'config_value' => '12345678',
                     'config_type' => ConfigType::KEY->value,
                     'description' => 'Client ID App',
                 ],
                 [
-                    'config_key' => ConfigKey::APP_SECRET->value,
-                    'config_value' => 'c75cb5b9b7d84f60b77ab34e34c5f2',
-                    'config_type' => ConfigType::KEY->value,
-                    'description' => 'App Secret',
-                ],
-                [
-                    'config_key' => ConfigKey::APP_ID_ZALO->value,
-                    'config_value' => '3868673896980557394',
-                    'config_type' => ConfigType::KEY->value,
-                    'description' => 'App Secret',
-                ],
-                [
-                    'config_key' => ConfigKey::APP_SECRET_ZALO->value,
-                    'config_value' => 'r9drU3Y0xDF3T22WN8YB',
+                    'config_key' => 'APP_SECRET',
+                    'config_value' => '12345678',
                     'config_type' => ConfigType::KEY->value,
                     'description' => 'App Secret',
                 ],
