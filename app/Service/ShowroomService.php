@@ -113,7 +113,7 @@ class ShowroomService extends BaseService
     }
     /**
      * Get showroom detail by ID
-     * 
+     *
      * @param int $showroomId
      * @return ServiceReturn
      */
@@ -150,12 +150,7 @@ class ShowroomService extends BaseService
     {
         try {
 
-            if($user->role != UserRole::CTV->value){
-                $cameras = $user->cameras->where('is_active', true)->where('bind_status', true)->where('enable', true)->get();
-                
-            }else{
-                $cameras = $this->cameraModel->where('is_active', true)->where('bind_status', true)->where('enable', true)->get();
-            }
+            $cameras = $this->cameraModel->where('is_active', true)->where('bind_status', true)->where('enable', true)->get();
             return ServiceReturn::success(
                 data: $cameras
             );

@@ -117,4 +117,16 @@ enum CacheKey: string
      * Cache live list
      */
     case CACHE_LIVE_STREAM = 'CACHE_LIVE_STREAM';
+
+    /**
+     * Cache token tạm zalo auth
+     */
+    case CACHE_ZALO_AUTH_TOKEN = 'CACHE_ZALO_AUTH_TOKEN';
+
+    /**
+     * Cache token tạm zalo auth
+     */
+    case CACHE_ZALO_AUTH_TOKEN_VERIFY = 'CACHE_ZALO_AUTH_TOKEN_VERIFY';
+    case CACHE_ZALO_AUTH_CODE_VERIFIER = 'CACHE_ZALO_AUTH_CODE_VERIFIER';
+    case CACHE_ZALO_AUTH_STATE = 'CACHE_ZALO_AUTH_STATE';
 }

@@ -22,6 +22,10 @@ class CameraController extends BaseController
     {
         $request->validate([
             'device_id' => 'required|string|exists:cameras,device_id',
+        ],
+        [
+            'device_id.required' => 'Vui lòng nhập device_id',
+            'device_id.exists' => 'Device_id không tồn tại',
         ]);
 
         $result = $this->cameraService->startCameraLive(

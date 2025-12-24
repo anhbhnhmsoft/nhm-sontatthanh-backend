@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use App\Core\Cache\CacheKey;
+use App\Core\Cache\Caching;
 use App\Core\LogHelper;
 use App\Core\Service\BaseService;
 use App\Core\Service\ServiceReturn;
@@ -19,6 +21,7 @@ class ZaloService extends BaseService
     protected Zalo $zalo;
     public function __construct(protected ConfigService $configService)
     {
+        parent::__construct();
         $idRes = $this->configService->getConfigByKey(ConfigKey::APP_ID_ZALO);
         $secretRes = $this->configService->getConfigByKey(ConfigKey::APP_SECRET_ZALO);
         if ($idRes->isError() || $secretRes->isError()) {
@@ -62,9 +65,10 @@ class ZaloService extends BaseService
 
     /**
      * Get Zalo OAuth authorization URL with PKCE
+     * @param string $ip
      * @return string|null
      */
-    public function getAuthorizationUrl(): ?string
+    public function getAuthorizationUrl(string $ip): ?string
     {
         try {
             $appIdConfig = $this->configService->getConfigByKey(ConfigKey::APP_ID_ZALO);
@@ -73,16 +77,17 @@ class ZaloService extends BaseService
                 return null;
             }
 
+            LogHelper::debug('Ip ' . $ip);
             // Generate PKCE parameters
             $codeVerifier = PKCEUtil::genCodeVerifier();
             $codeChallenge = PKCEUtil::genCodeChallenge($codeVerifier);
 
-            // Store code_verifier in session for later use in callback
-            Session::put('zalo_code_verifier', $codeVerifier);
+            // Store code_verifier in cache for later use in callback
+            Caching::setCache(CacheKey::CACHE_ZALO_AUTH_CODE_VERIFIER, $codeVerifier, $ip, 60);
 
             // Generate random state for CSRF protection
-            $state = Str::random(32);
-            Session::put('zalo_oauth_state', $state);
+            $state = Str::random(40);
+            Caching::setCache(CacheKey::CACHE_ZALO_AUTH_STATE, $state, $ip, 60);
 
             // Get callback URL from route
             $callbackUrl = route('zalo.callback');
@@ -111,14 +116,15 @@ class ZaloService extends BaseService
      * @param string $code
      * @return string|null
      */
-    public function getAccessTokenFromCode(string $code): ?string
+    public function getAccessTokenFromCode(string $code, string $ip): ?string
     {
         try {
-            // Retrieve code_verifier from session
-            $codeVerifier = Session::get('zalo_code_verifier');
+            LogHelper::debug('Ip ' . $ip);
+            // Retrieve code_verifier from cache
+            $codeVerifier = Caching::getCache(CacheKey::CACHE_ZALO_AUTH_CODE_VERIFIER, $ip);
 
             if (!$codeVerifier) {
-                LogHelper::error('Code verifier not found in session');
+                LogHelper::error('Code verifier not found in cache');
                 return null;
             }
 
@@ -134,9 +140,8 @@ class ZaloService extends BaseService
             $accessToken = $zaloToken->getAccessToken();
 
             // Clear session data after successful token exchange
-            Session::forget('zalo_code_verifier');
-            Session::forget('zalo_oauth_state');
-
+            Caching::deleteCache(CacheKey::CACHE_ZALO_AUTH_CODE_VERIFIER, $ip);
+            Caching::deleteCache(CacheKey::CACHE_ZALO_AUTH_STATE, $ip);
             LogHelper::debug('Successfully exchanged code for access token');
 
             return $accessToken;
@@ -144,8 +149,8 @@ class ZaloService extends BaseService
             LogHelper::error('Zalo Access Token Exception: ' . $e->getMessage());
 
             // Clear session data on error
-            Session::forget('zalo_code_verifier');
-            Session::forget('zalo_oauth_state');
+            Caching::deleteCache(CacheKey::CACHE_ZALO_AUTH_CODE_VERIFIER, $ip);
+            Caching::deleteCache(CacheKey::CACHE_ZALO_AUTH_STATE, $ip);
 
             return null;
         }

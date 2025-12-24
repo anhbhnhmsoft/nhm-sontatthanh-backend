@@ -33,7 +33,7 @@ class NotificationService extends BaseService
      * @param string $expoPushToken
      * @param ?string $deviceId
      * @param ?string $deviceType
-     * @return ServiceReturn 
+     * @return ServiceReturn
      */
     public function deviceToken(string $expoPushToken, ?string $deviceId, ?string $deviceType): ServiceReturn
     {
@@ -44,21 +44,21 @@ class NotificationService extends BaseService
                 return ServiceReturn::error('Không tìm thấy người dùng');
             }
 
-            $userDevice = $this->userDeviceModel->where('user_id', $user->id)->where('device_id', $deviceId)->first();
-            if ($userDevice) {
-                $userDevice->expo_push_token = $expoPushToken;
-                $userDevice->device_type = $deviceType;
-                $userDevice->save();
-                return ServiceReturn::success($userDevice);
-            } else {
-                $userDevice = $this->userDeviceModel->create([
+            $this->userDeviceModel->where('expo_push_token', $expoPushToken)
+                ->where('user_id', '!=', $user->id)
+                ->delete();
+            $userDevice = $this->userDeviceModel->updateOrCreate(
+                [
                     'user_id' => $user->id,
                     'device_id' => $deviceId,
-                    'device_type' => $deviceType,
+                ],
+                [
                     'expo_push_token' => $expoPushToken,
-                ]);
-                return ServiceReturn::success($userDevice);
-            }
+                    'device_type' => $deviceType,
+                ]
+            );
+
+            return ServiceReturn::success($userDevice);
         } catch (\Exception $th) {
             LogHelper::error('Xảy ra lỗi ở NotificationService@deviceToken: ' . $th->getMessage());
             return ServiceReturn::error('Xảy ra lỗi khi thêm device token');

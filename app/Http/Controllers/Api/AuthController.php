@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Core\Cache\CacheKey;
+use App\Core\Cache\Caching;
 use App\Core\Controller\BaseController;
 use App\Http\Requests\Auth\EditProfileRequest;
 use App\Http\Requests\Auth\LoginRequest;
@@ -41,7 +43,7 @@ class AuthController extends BaseController
         }
 
         $user = $result->getData()['user'];
-        $token = $result->getData()['token'];
+        $token = (string) $result->getData()['token'];
         return $this->sendSuccess(
             [
                 'user' => UserResource::make($user),
@@ -265,7 +267,7 @@ class AuthController extends BaseController
 
         // If code is provided, exchange it for access_token
         if ($code && !$accessToken) {
-            $accessToken = $this->authService->getAccessTokenFromCode($code);
+            $accessToken = $this->authService->getAccessTokenFromCode($code, $request->ip());
             if (!$accessToken) {
                 return $this->sendError(
                     'Không thể lấy access token từ Zalo',
@@ -274,7 +276,7 @@ class AuthController extends BaseController
             }
         }
 
-        $result = $this->authService->authenticateWithZalo($accessToken);
+        $result = $this->authService->authenticateWithZalo($accessToken, $request->ip());
 
         if ($result->isError()) {
             return $this->sendError(
@@ -284,7 +286,7 @@ class AuthController extends BaseController
         }
 
         $user = $result->getData()['user'];
-        $token = $result->getData()['token'];
+        $token = (string) $result->getData()['token'];
 
         return $this->sendSuccess(
             [

@@ -16,7 +16,7 @@
                 }
             }">
                 <video x-ref="player" class="w-full rounded-xl shadow-sm border border-gray-200" controls autoplay
-                    playsinline></video>
+                       playsinline></video>
             </div>
             <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
         @else
