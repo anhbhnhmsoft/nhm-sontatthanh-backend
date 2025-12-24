@@ -376,7 +376,7 @@ class VideoLiveService
                 'data' => Caching::getCache(CacheKey::CACHE_LIVE_STREAM, $deviceId)
             ]);
         }
-        
+
         $device = $this->findCamera($deviceId);
         if (!$device) {
             return ServiceReturn::error('Thiết bị không tồn tại');
@@ -407,9 +407,9 @@ class VideoLiveService
             $stream = $resultData['streams'][0];
 
             $device->update(['is_active' => true]);
-
+            $baseDomain = "http://cmgw-sg.easy4ipcloud.com:8888/";
             $broadcast = [
-                'coverUrl'   => $stream['coverUrl'],
+                'coverUrl'   => $baseDomain . $stream['coverUrl'],
                 'streamId'   => $stream['streamId'],
                 'hls'        => $stream['hls'],
                 'liveToken'  => $resultData['liveToken'],

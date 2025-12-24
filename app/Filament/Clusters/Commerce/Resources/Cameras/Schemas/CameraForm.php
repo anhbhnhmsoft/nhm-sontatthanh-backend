@@ -76,7 +76,6 @@ class CameraForm
                                 name: 'users',
                                 titleAttribute: 'name',
                                 modifyQueryUsing: fn(Builder $query, $livewire) => $query
-                                    ->where('role', UserRole::SALE->value)
                             )
                             ->columnSpanFull(),
                     ])

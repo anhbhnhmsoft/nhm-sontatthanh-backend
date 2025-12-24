@@ -32,9 +32,10 @@ class AuthService extends BaseService
     /**
      * Authenticate with Zalo (Unified Login/Register)
      * @param string $accessToken
+     * @param string $ip
      * @return ServiceReturn
      */
-    public function authenticateWithZalo(string $accessToken): ServiceReturn
+    public function authenticateWithZalo(string $accessToken, string $ip): ServiceReturn
     {
         try {
             // Step 1: Get Zalo Profile
@@ -65,7 +66,12 @@ class AuthService extends BaseService
             }
 
             $token = $this->createTokenAuth($user);
-
+            Caching::setCache(
+                CacheKey::CACHE_ZALO_AUTH_TOKEN,
+                $token,
+                $ip,
+                60 * 5,
+            );
             return ServiceReturn::success([
                 'user' => $user,
                 'token' => $token
@@ -79,11 +85,17 @@ class AuthService extends BaseService
     /**
      * Get access token from Zalo authorization code
      * @param string $code
+     * @param string $ip
      * @return string|null
      */
-    public function getAccessTokenFromCode(string $code): ?string
+    public function getAccessTokenFromCode(string $code, string $ip): ?string
     {
-        return $this->zaloService->getAccessTokenFromCode($code);
+        $accessToken = $this->zaloService->getAccessTokenFromCode($code, $ip);
+        if (!$accessToken) {
+            return null;
+        }
+
+        return $accessToken;
     }
 
     /**
@@ -350,7 +362,7 @@ class AuthService extends BaseService
      */
     protected function countCacheVerifyOtpRegister(string $phone): int
     {
-        // xác định trạng thái cache số  nhập opt 
+        // xác định trạng thái cache số  nhập opt
         $hasCacheCount = Caching::hasCache(
             key: CacheKey::CACHE_KEY_OTP_REGISTER_ATTEMPTS,
             uniqueKey: $phone,
@@ -420,7 +432,7 @@ class AuthService extends BaseService
                 return ServiceReturn::error('Thông tin đăng ký không tìm thấy hoặc đã hết hạn');
             }
 
-            // lây thông tin user đăng ký 
+            // lây thông tin user đăng ký
             $userReal = $pseudoUserCache[0];
 
             // tiến hành ghi vào db

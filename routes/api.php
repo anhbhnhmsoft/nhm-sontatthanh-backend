@@ -20,6 +20,8 @@ Route::prefix('auth')->group(function () {
             Route::post('forgot-password/verify', [AuthController::class, 'verifyForgotPasswordOtp']);
             Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
             Route::post('zalo-authenticate', [AuthController::class, 'zaloAuthenticate']);
+            Route::post('keep-zalo-auth-token', [\App\Http\Controllers\Web\ZaloAuthController::class, 'keepZaloAuthToken']);
+            Route::post('verify-zalo-auth-token', [\App\Http\Controllers\Web\ZaloAuthController::class, 'verifyZaloAuthToken']);
         });
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);

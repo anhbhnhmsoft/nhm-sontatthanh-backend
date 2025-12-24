@@ -48,8 +48,7 @@ class CamerasTable
                         if (!$record->users) {
                             return [];
                         }
-
-                        return collect($record->users)->pluck('name')->all();
+                        return  array_slice(collect($record->users)->pluck('name')->all(), 0, 3);
                     }),
                 TextColumn::make('description')
                     ->label('Mô tả')
@@ -148,9 +147,16 @@ class CamerasTable
 
                                 $action->halt();
                             }
+                            $url = $res->getData()['hls'];
+
+                            $proxyUrl = str_replace(
+                                'http://cmgw-sg.easy4ipcloud.com:8888/',
+                                'https://sontatthanh.vn/camera-proxy/',
+                                $url
+                            );
 
                             $action->arguments([
-                                'hls_url' => $res->getData()['hls'],
+                                'hls_url' => $proxyUrl,
                             ]);
                         })
                         ->modalContent(fn(array $arguments) => view('filament.pages.video-player', [

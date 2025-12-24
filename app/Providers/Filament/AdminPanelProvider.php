@@ -18,6 +18,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -32,6 +33,8 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Green,
             ])
+            ->brandLogo(asset('images/logo.png'))
+            ->brandLogoHeight('3rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
@@ -43,6 +46,10 @@ class AdminPanelProvider extends PanelProvider
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
+            ->renderHook(
+                'panels::head.end',
+                fn() => Blade::render('<link rel="icon" type="image/svg+xml" href="' . asset('images/favicon.png') . '" />'),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
