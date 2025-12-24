@@ -31,11 +31,12 @@ class AuthService extends BaseService
 
     /**
      * Authenticate with Zalo (Unified Login/Register)
-     * @param string $accessToken
-     * @param string $ip
+     * @param string $accessToken - token của Zalo
+     * @param string $ip - ip của client
+     * @param string $token - token xác thực của client
      * @return ServiceReturn
      */
-    public function authenticateWithZalo(string $accessToken, string $ip): ServiceReturn
+    public function authenticateWithZalo(string $accessToken, string $ip, string $token): ServiceReturn
     {
         try {
             // Step 1: Get Zalo Profile
@@ -65,12 +66,15 @@ class AuthService extends BaseService
                 return ServiceReturn::error('Tài khoản của bạn đang bị khóa');
             }
 
-            $token = $this->createTokenAuth($user);
+            $tokenAuth = $this->createTokenAuth($user);
             Caching::setCache(
-                CacheKey::CACHE_ZALO_AUTH_TOKEN,
-                $token,
-                $ip,
-                60 * 5,
+                key:CacheKey::CACHE_ZALO_AUTH_TOKEN,
+                value: [
+                    'token' => $tokenAuth,
+                    'user' => $user,
+                ],
+                uniqueKey: $ip.$token,
+                expire: 60 * 5,
             );
             return ServiceReturn::success([
                 'user' => $user,

@@ -17,14 +17,23 @@ class ZaloAuthController extends BaseController
     public function __construct(
         protected ZaloService $zaloService,
         protected AuthService $authService
-    ) {}
+    )
+    {
+    }
 
     /**
      * Redirect to Zalo OAuth page
      */
     public function redirect(Request $request)
     {
-        $redirectUrl = $this->zaloService->getAuthorizationUrl($request->ip());
+        $token = $request->get('token');
+        $ip = $request->ip();
+        if (!Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip.$token)) {
+            return $this->sendError(
+                message: 'Token không hợp lệ',
+            );
+        }
+        $redirectUrl = $this->zaloService->getAuthorizationUrl($ip, $token);
 
         if (!$redirectUrl) {
             return response()->json([
@@ -43,47 +52,48 @@ class ZaloAuthController extends BaseController
         $code = $request->query('code');
         $state = $request->query('state');
         $error = $request->query('error');
-        Log::info('Zalo OAuth Callback', compact('code', 'state', 'error'));
+        $token = $request->query('token','');
+        $ip = $request->ip();
         // Nếu user từ chối
         if ($error) {
             Log::warning('Zalo OAuth Error: ' . $error);
-            return $this->redirectToMobileApp(null, 'Bạn đã từ chối đăng nhập với Zalo', null, $request->ip());
+            return $this->redirectToMobileApp(null, 'Bạn đã từ chối đăng nhập với Zalo', null, $ip, $token);
         }
 
         // Validate state to prevent CSRF attacks
-        $expectedState = Caching::getCache(CacheKey::CACHE_ZALO_AUTH_STATE, $request->ip());
+        $expectedState = Caching::getCache(CacheKey::CACHE_ZALO_AUTH_STATE, $ip.$token);
         if (!$state || !$expectedState || $state !== $expectedState) {
             Log::warning('Zalo OAuth State Mismatch', [
                 'expected' => $expectedState,
                 'received' => $state
             ]);
-            return $this->redirectToMobileApp(null, 'Xác thực không hợp lệ. Vui lòng thử lại.', null, $request->ip());
+            return $this->redirectToMobileApp(null, 'Xác thực không hợp lệ. Vui lòng thử lại.', null, $ip, $token);
         }
 
         // Nếu không có code
         if (!$code) {
-            return $this->redirectToMobileApp(null, 'Không nhận được mã xác thực từ Zalo', null, $request->ip());
+            return $this->redirectToMobileApp(null, 'Không nhận được mã xác thực từ Zalo', null, $ip, $token);
         }
 
         // Exchange code for access token
-        $accessToken = $this->zaloService->getAccessTokenFromCode($code, $request->ip());
+        $accessToken = $this->zaloService->getAccessTokenFromCode($ip, $token);
 
         if (!$accessToken) {
-            return $this->redirectToMobileApp(null, 'Không thể lấy access token từ Zalo', null, $request->ip());
+            return $this->redirectToMobileApp(null, 'Không thể lấy access token từ Zalo', null, $ip, $token);
         }
 
         // Authenticate with Zalo
-        $result = $this->authService->authenticateWithZalo($accessToken, $request->ip());
+        $result = $this->authService->authenticateWithZalo($accessToken, $ip, $token);
 
         if ($result->isError()) {
-            return $this->redirectToMobileApp(null, $result->getMessage(), null, $request->ip());
+            return $this->redirectToMobileApp(null, $result->getMessage(), null, $ip, $token);
         }
 
         $token = (string) $result->getData()['token'];
         $user =  $result->getData()['user'];
 
         // Redirect về mobile app với token
-        return $this->redirectToMobileApp($token, 'Đăng nhập thành công', $user, $request->ip());
+        return $this->redirectToMobileApp($tokenUser, 'Đăng nhập thành công', $user, $ip, $token);
     }
 
     /**
@@ -94,9 +104,9 @@ class ZaloAuthController extends BaseController
      * @param mixed $user User object if authentication successful
      * @return \Illuminate\View\View
      */
-    protected function redirectToMobileApp(?string $token, string $message, $user = [], string $ip)
+    protected function redirectToMobileApp(?string $token, string $message, $user = [], string $ip, string $tokenVerify)
     {
-        if(!Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip)) {
+        if (!Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip.$tokenVerify)) {
             return view('zalo-callback', [
                 'deeplink' => '',
                 'success' => $token !== null,
@@ -105,10 +115,9 @@ class ZaloAuthController extends BaseController
             ]);
         }
 
-        $data = Caching::getCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip);
+        $data = Caching::getCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip.$tokenVerify);
         $deeplink = $data['deeplink'] ?? '';
         LogHelper::debug('Zalo Auth Callback', compact('token', 'message', 'user', 'ip', 'deeplink'));
-
         // Return view with all necessary data
         return view('zalo-callback', [
             'deeplink' => $deeplink,
@@ -126,7 +135,7 @@ class ZaloAuthController extends BaseController
         $request->validate([
             'token' => 'required|string',
             'deeplink' => 'required|string',
-        ],[
+        ], [
             'token.required' => 'Token không được để trống',
             'deeplink.required' => 'Deeplink không được để trống',
         ]);
@@ -134,18 +143,21 @@ class ZaloAuthController extends BaseController
         $token = (string) $request->input('token');
         $deeplink = (string) $request->input('deeplink');
         $ip = $request->ip();
-        LogHelper::debug('Zalo Auth Keep Token', compact('token', 'deeplink', 'ip'));
-        if(Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip)) {
+
+        if (Caching::hasCache(
+            key: CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY,
+            uniqueKey: $ip.$token,
+        )) {
             return $this->sendSuccess(
-                message:'Token đã được lưu trước đó',
+                message: 'Token đã được lưu trước đó',
             );
         }
 
         Caching::setCache(
-            CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY,
-            [ 'token' => $token, 'deeplink' => $deeplink],
-            $ip,
-            60 * 5,
+            key: CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY,
+            value: ['token' => $token, 'deeplink' => $deeplink],
+            uniqueKey: $ip.$token,
+            expire: 60 * 5,
         );
 
         return $this->sendSuccess(
@@ -160,49 +172,31 @@ class ZaloAuthController extends BaseController
     {
         $request->validate([
             'token' => 'required|string',
-            'deeplink' => 'required|string',
-        ],[
+        ], [
             'token.required' => 'Token không được để trống',
-            'deeplink.required' => 'Deeplink không được để trống',
         ]);
 
         $token = (string) $request->input('token');
         $deeplink = (string) $request->input('deeplink');
         $ip = $request->ip();
 
-        if(!Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip)) {
+        if (!Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip.$token)) {
             return $this->sendError(
                 'Phiên làm việc đã hết hạn',
                 400,
             );
         }
 
-        $cachedToken = Caching::getCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip);
-        if($cachedToken['token'] !== $token) {
-            return $this->sendError(
-                'Token auth zalo không đúng',
-                400,
-            );
-        }
-
-        $ip = $request->ip();
-        if($cachedToken['deeplink'] !== $deeplink) {
-            return $this->sendError(
-                'Deeplink không đúng',
-                400,
-            );
-        }
-
-        if(!Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN, $ip)) {
+        if (!Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN, $ip.$token)) {
             return $this->sendError(
                 'IP này chưa xác thực token auth zalo',
                 400,
             );
         }
 
-        $cachedTokenVerify = Caching::getCache(CacheKey::CACHE_ZALO_AUTH_TOKEN, $ip);
+        $cachedTokenVerify = Caching::getCache(CacheKey::CACHE_ZALO_AUTH_TOKEN, $ip.$token);
         return $this->sendSuccess(
-            ['token' => $cachedTokenVerify],
+            ['token' => $cachedTokenVerify['token'], 'user' => $cachedTokenVerify['user']],
             'Xác thực token auth zalo thành công'
         );
     }
