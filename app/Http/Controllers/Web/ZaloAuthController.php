@@ -26,7 +26,7 @@ class ZaloAuthController extends BaseController
      */
     public function redirect(Request $request)
     {
-        $token = $request->get('token');
+        $token =  (string) $request->get('token');
         $ip = $request->ip();
         if (!Caching::hasCache(CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY, $ip.$token)) {
             return $this->sendError(
@@ -49,10 +49,10 @@ class ZaloAuthController extends BaseController
      */
     public function callback(Request $request)
     {
-        $code = $request->query('code');
-        $state = $request->query('state');
-        $error = $request->query('error');
-        $token = $request->query('token','');
+        $code = (string) $request->query('code');
+        $state = (string) $request->query('state');
+        $error = (string) $request->query('error');
+        $token = (string) $request->query('token','');
         $ip = $request->ip();
         // Nếu user từ chối
         if ($error) {
