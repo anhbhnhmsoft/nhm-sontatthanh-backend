@@ -51,6 +51,7 @@ Route::prefix('news')->group(function () {
     Route::get('list', [NewsController::class, 'list']);
     Route::get('{id}', [NewsController::class, 'detail']);
 });
+
 Route::prefix('service')->middleware('auth:sanctum')->group(function () {
     Route::post('start-live', [CameraController::class, 'startLive']);
 });
