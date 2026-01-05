@@ -6,7 +6,7 @@ use App\Core\Cache\CacheKey;
 use App\Core\Cache\Caching;
 use App\Core\Controller\BaseController;
 use App\Core\Controller\FilterDTO;
-use App\Core\Controller\ListRequest;
+use App\Http\Requests\ProductListRequest;
 use App\Http\Resources\ProductResource;
 use App\Service\ProductService;
 use Illuminate\Http\JsonResponse;
@@ -20,11 +20,11 @@ class ProductController extends BaseController
     /**
      * Get paginated list of products
      * NOTE: No caching because product data is dynamic with filters
-     * 
-     * @param ListRequest $request
+     *
+     * @param ProductListRequest $request
      * @return JsonResponse
      */
-    public function list(ListRequest $request): JsonResponse
+    public function list(ProductListRequest $request): JsonResponse
     {
         /** @var FilterDTO $filterOptions */
         $filterOptions = $request->getFilterOptions();
@@ -40,7 +40,7 @@ class ProductController extends BaseController
     /**
      * Get product detail by ID
      * Cache strategy: Cache each product detail for 1 hour
-     * 
+     *
      * @param int $id
      * @return JsonResponse
      */

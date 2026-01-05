@@ -121,11 +121,9 @@ class ShowroomForm
                                         TextInput::make('phone')
                                             ->label('Số điện thoại')
                                             ->required()
-                                            ->numeric()
                                             ->maxLength(255)
                                             ->tel()
                                             ->validationMessages([
-                                                'required' => 'Vui lòng nhập số điện thoại',
                                                 'max' => 'Số điện thoại không được vượt quá 255 ký tự',
                                                 'regex' => 'Số điện thoại không hợp lệ',
                                             ]),

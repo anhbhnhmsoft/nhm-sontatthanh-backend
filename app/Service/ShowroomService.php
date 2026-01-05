@@ -157,11 +157,25 @@ class ShowroomService extends BaseService
         } catch (\Exception $exception) {
             LogHelper::error(
                 message: "Lỗi ShowroomService@cameraLibrary",
-                ex: $excepti
+                ex: $exception
             );
             return ServiceReturn::success(
                 data: []
             );
+        }
+    }
+
+    /**
+     * @return ServiceReturn
+     */
+    public function getHotlines(): ServiceReturn
+    {
+        try {
+            $query = $this->showroomModel->query()->select(['id', 'name', 'address', 'email', 'logo', 'hotlines'])->get();
+            return ServiceReturn::success(data: $query);
+        } catch (\Exception $exception) {
+            LogHelper::error('ShowroomService@getHotlines' . $exception->getMessage(), ex: $exception);
+            return ServiceReturn::error('Có lỗi xảy ra vui lòng thử lại sau');
         }
     }
 }

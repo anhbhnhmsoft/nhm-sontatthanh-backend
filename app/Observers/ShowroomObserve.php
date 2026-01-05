@@ -51,5 +51,6 @@ class ShowroomObserve
     private function refreshCache(Showroom $showroom): void
     {
         Caching::deleteCache(CacheKey::CACHE_SHOWROOM,"detail_{$showroom->id}");
+        Caching::deleteCache(CacheKey::CACHE_SHOWROOM);
     }
 }

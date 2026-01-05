@@ -18,7 +18,7 @@ class ProductService extends BaseService
 
     /**
      * Get paginated list of products with filters
-     * 
+     *
      * @param FilterDTO $filterOptions
      * @return ServiceReturn
      */
@@ -74,9 +74,13 @@ class ProductService extends BaseService
                     $query->where('quantity', '>', 0);
                 }
             }
-
-            // Default ordering by newest first
-            $query->orderBy('created_at', 'desc');
+            // Apply sorting
+            if ($filterOptions->sortBy) {
+                $query->orderBy($filterOptions->sortBy, $filterOptions->direction);
+            } else {
+                // Default ordering by newest first
+                $query->orderBy('created_at', 'desc');
+            }
 
             $paginate = $query->paginate(
                 perPage: $filterOptions->perPage,
@@ -104,7 +108,7 @@ class ProductService extends BaseService
 
     /**
      * Get product detail by ID
-     * 
+     *
      * @param int $productId
      * @return ServiceReturn
      */
