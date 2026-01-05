@@ -9,11 +9,15 @@ use App\Core\Service\BaseService;
 use App\Core\Service\ServiceException;
 use App\Core\Service\ServiceReturn;
 use App\Enums\DirectFile;
+use App\Enums\UserNotificationType;
 use App\Enums\UserRole;
+use App\Http\DTO\NotificationPayload;
+use App\Jobs\SendNotificationJob;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AuthService extends BaseService
@@ -25,9 +29,11 @@ class AuthService extends BaseService
     protected int $registerTimeout = 60 * 60;  // Thời gian chờ sau khi đăng ký
 
     public function __construct(
-        protected User $userModel,
+        protected User        $userModel,
         protected ZaloService $zaloService,
-    ) {}
+    )
+    {
+    }
 
     /**
      * Authenticate with Zalo (Unified Login/Register)
@@ -51,7 +57,8 @@ class AuthService extends BaseService
 
             $user = $this->userModel->where('zalo_id', $zaloId)->first();
             if (!$user) {
-                $user = $this->userModel->create([
+                $sales = $this->userModel->where('role', UserRole::SALE->value)->get();
+                $data = [
                     'zalo_id' => $zaloId,
                     'phone' => null,
                     'name' => $name,
@@ -59,21 +66,36 @@ class AuthService extends BaseService
                     'joined_at' => now(),
                     'is_active' => true,
                     'avatar' => $avatarUrl,
-                ]);
+                ];
+                if ($sales->isNotEmpty()) {
+                    $randomSale = $sales->random();
+                    $data['sale_id'] = $randomSale->id;
+                }
+
+                $user = $this->userModel->create($data);
             }
 
             if (!$user->is_active) {
                 return ServiceReturn::error('Tài khoản của bạn đang bị khóa');
             }
-
+//            $notifcation = new SendNotificationJob(
+//                userIds: [ $user->id],
+//                payload: new NotificationPayload(
+//                    title: 'Xác thực Zalo thành công',
+//                    description: 'Chào mừng ' . $user->name . ' quay lại ứng dụng!',
+//                    type: UserNotificationType::ZALO_AUTH_SUCCESS,
+//                    data: [],
+//                ),
+//            );
+//            $notifcation->dispatch();
             $tokenAuth = $this->createTokenAuth($user);
             Caching::setCache(
-                key:CacheKey::CACHE_ZALO_AUTH_TOKEN,
+                key: CacheKey::CACHE_ZALO_AUTH_TOKEN,
                 value: [
                     'token' => $tokenAuth,
                     'user' => $user,
                 ],
-                uniqueKey: $ip.$token,
+                uniqueKey: $ip . $token,
                 expire: 60 * 5,
             );
             return ServiceReturn::success([
@@ -173,7 +195,8 @@ class AuthService extends BaseService
         string $phone,
         string $password,
         string $name,
-    ): ServiceReturn {
+    ): ServiceReturn
+    {
         try {
             if (!$phone || !$password || !$name) {
                 return ServiceReturn::error(message: 'Nhập đầy đủ thông tin');
@@ -807,6 +830,76 @@ class AuthService extends BaseService
                 $th
             );
             return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');
+        }
+    }
+
+    /**
+     * Chỉnh sửa avatar người dùng.
+     * @param  $file
+     * @return ServiceReturn
+     */
+    public function editInfoAvatar($file): ServiceReturn
+    {
+        try {
+            $user = $this->userModel->find(Auth::id());
+            if (!$user) {
+                return ServiceReturn::error(message: 'Người dùng không tồn tại');
+            }
+            if (!$file instanceof UploadedFile) {
+                return ServiceReturn::error(message: 'Hình ảnh avatar không hợp lệ');
+            }
+            $avatarPathNew = $file->store(DirectFile::makePathById(
+                type: DirectFile::AVATARS,
+                id: $user->id
+            ), 'public');
+            if (!$avatarPathNew) {
+                return ServiceReturn::error(message: 'Lỗi khi lưu hình ảnh avatar');
+            }
+            // Xóa avatar cũ nếu có
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            // Cập nhật avatar_path trong bảng users
+            $user->avatar = $avatarPathNew;
+            $user->save();
+            return ServiceReturn::success(
+                data: $user
+            );
+        } catch (\Throwable $exception) {
+            LogHelper::error(
+                message: "Lỗi AuthService@editInfoAvatar",
+                ex: $exception
+            );
+            return ServiceReturn::error(message: $exception->getMessage());
+        }
+    }
+
+    /**
+     * Xóa avatar người dùng.
+     * @return ServiceReturn
+     */
+    public function deleteAvatar(): ServiceReturn
+    {
+        try {
+            $user = $this->userModel->find(Auth::id());
+            if (!$user) {
+                return ServiceReturn::error(message: 'Người dùng không tồn tại');
+            }
+            // Xóa avatar cũ nếu có
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = null;
+            $user->save();
+            return ServiceReturn::success(
+                data: $user
+            );
+        } catch (\Throwable  $exception) {
+            LogHelper::error(
+                message: "Lỗi AuthService@deleteAvatar",
+                ex: $exception
+            );
+            return ServiceReturn::error(message: 'Có lỗi xảy ra. Vui lòng thử lại sau');
         }
     }
 }

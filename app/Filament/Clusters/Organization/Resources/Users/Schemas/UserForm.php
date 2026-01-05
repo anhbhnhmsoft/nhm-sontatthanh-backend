@@ -31,7 +31,7 @@ class UserForm
                                     ->label('Tên')
                                     ->validationMessages([
                                         'required' => 'Vui lòng nhập tên',
-                                        'max_length' => 'Tên không được vượt quá 255 ký tự',
+                                        'max' => 'Tên không được vượt quá 255 ký tự',
                                     ]),
                                 FileUpload::make('avatar')
                                     ->image()
@@ -46,7 +46,7 @@ class UserForm
                                     ->label('Email')
                                     ->validationMessages([
                                         'required' => 'Vui lòng nhập email',
-                                        'max_length' => 'Email không được vượt quá 255 ký tự',
+                                        'max' => 'Email không được vượt quá 255 ký tự',
                                         'unique' => 'Email đã tồn tại',
                                     ]),
                                 TextInput::make('phone')
@@ -56,7 +56,7 @@ class UserForm
                                     ->label('Số điện thoại')
                                     ->validationMessages([
                                         'required' => 'Vui lòng nhập số điện thoại',
-                                        'max_length' => 'Số điện thoại không được vượt quá 255 ký tự',
+                                        'max' => 'Số điện thoại không được vượt quá 255 ký tự',
                                         'unique' => 'Số điện thoại đã tồn tại',
                                     ]),
                                 Select::make('collaborators')
@@ -87,7 +87,7 @@ class UserForm
                                     ->maxLength(255)
                                     ->label('Địa chỉ')
                                     ->validationMessages([
-                                        'max_length' => 'Địa chỉ không được vượt quá 255 ký tự',
+                                        'max' => 'Địa chỉ không được vượt quá 255 ký tự',
                                     ]),
                                 Select::make('department_id')
                                     ->label('Phòng ban')

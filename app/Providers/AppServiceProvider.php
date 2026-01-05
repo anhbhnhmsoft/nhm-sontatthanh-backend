@@ -24,6 +24,7 @@ use App\Service\NewsService;
 use App\Service\ProductService;
 use App\Service\ShowroomService;
 use App\Service\VideoLiveService;
+use App\Service\ZaloService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -42,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-
+        $this->registerObserve();
     }
 
     /**
@@ -60,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NewsService::class);
         $this->app->singleton(CameraService::class);
         $this->app->singleton(VideoLiveService::class);
+        $this->app->singleton(ZaloService::class);
     }
 
     protected function registerObserve(): void

@@ -8,3 +8,5 @@ Route::prefix('auth/zalo')->group(function () {
     Route::get('redirect', [ZaloAuthController::class, 'redirect'])->name('zalo.redirect');
     Route::get('callback', [ZaloAuthController::class, 'callback'])->name('zalo.callback');
 });
+
+Route::view('/privacy-policy', 'privacy-policy')->name('privacy-policy');

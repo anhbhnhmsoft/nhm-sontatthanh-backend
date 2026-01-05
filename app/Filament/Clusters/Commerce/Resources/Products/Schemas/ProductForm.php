@@ -33,16 +33,14 @@ class ProductForm
                                     ->maxLength(255)
                                     ->validationMessages([
                                         'required' => 'Tên sản phẩm không được để trống',
-                                        'max_length' => 'Tên sản phẩm không được vượt quá 255 ký tự',
+                                        'max' => 'Tên sản phẩm không được vượt quá 255 ký tự',
                                     ]),
 
                                 RichEditor::make('description')
                                     ->label('Miêu tả')
                                     ->required()
-                                    ->maxLength(255)
                                     ->validationMessages([
                                         'required' => 'Mô tả sản phẩm không được để trống',
-                                        'max_length' => 'Mô tả sản phẩm không được vượt quá 255 ký tự',
                                     ]),
                                 TextInput::make('price')
                                     ->label('Giá gốc')
@@ -150,6 +148,7 @@ class ProductForm
                                     ->validationMessages([
                                         'min' => 'Hình ảnh sản phẩm phải có ít nhất 1 ảnh',
                                         'max' => 'Hình ảnh sản phẩm không được vượt quá 10 ảnh',
+                                        'required' => 'Hình ảnh sản phẩm không được để trống',
                                     ]),
                                 Repeater::make('features')
                                     ->label('Tính năng')
@@ -157,11 +156,17 @@ class ProductForm
                                         TextInput::make('title')
                                             ->label('Tiêu đề  ')
                                             ->required()
-                                            ->columnSpan(1),
+                                            ->columnSpan(1)
+                                        ->validationMessages([
+                                            'required' => 'Tiêu đề tính năng không được để trống',
+                                        ]),
                                         TextInput::make('description')
                                             ->label('Mô tả chi tiết')
                                             ->required()
-                                            ->columnSpan(2),
+                                            ->columnSpan(2)
+                                        ->validationMessages([
+                                            'required' => 'Mô tả chi tiết tính năng không được để trống',
+                                        ]),
                                     ])
                                     ->columns(3)
                                     ->reorderable()
@@ -174,32 +179,45 @@ class ProductForm
                                     ->schema([
                                         TextInput::make('name')
                                             ->label('Tên màu')
-                                            ->required(),
+                                            ->required()
+                                        ->validationMessages([
+                                            'required' => 'Tên màu không được để trống',
+                                        ]),
                                         ColorPicker::make('code')
                                             ->label('Mã màu (Hex/Tên)')
                                             ->placeholder('#FF0000 hoặc Red')
-                                            ->required(),
+                                            ->required()
+                                        ->validationMessages([
+                                            'required' => 'Mã màu không được để trống',
+                                        ]),
                                     ])
                                     ->grid(2)
                                     ->reorderable()
                                     ->cloneable()
                                     ->collapsible()
-                                    ->defaultItems(2),
+                                    ->defaultItems(1),
                                 Repeater::make('specifications')
                                     ->label('Thông số kỹ thuật')
                                     ->schema([
                                         TextInput::make('name')
                                             ->label('Tên thông số')
-                                            ->required(),
+                                            ->required()
+                                        ->validationMessages([
+                                            'required' => 'Tên thông số không được để trống',
+                                        ]),
                                         TextInput::make('value')
                                             ->label('Giá trị')
-                                            ->required(),
+                                            ->required()
+                                            ->columnSpan(2)
+                                        ->validationMessages([
+                                            'required' => 'Giá trị thông số không được để trống',
+                                        ]),
                                     ])
                                     ->grid(2)
                                     ->reorderable()
                                     ->cloneable()
                                     ->collapsible()
-                                    ->defaultItems(2),
+                                    ->defaultItems(1),
 
                             ])
                     ])

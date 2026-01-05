@@ -27,6 +27,8 @@ Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
         Route::post('edit-profile', [AuthController::class, 'editProfile']);
+        Route::post('edit-avatar', [AuthController::class, 'editAvatar']);
+        Route::delete('delete-avatar', [AuthController::class, 'deleteAvatar']);
     });
 });
 

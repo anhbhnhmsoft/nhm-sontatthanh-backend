@@ -150,14 +150,14 @@ class ShowroomService extends BaseService
     {
         try {
 
-            $cameras = $this->cameraModel->where('is_active', true)->where('bind_status', true)->where('enable', true)->get();
+            $cameras = $user->cameras()->where('is_active', true)->where('bind_status', true)->where('enable', true)->get();
             return ServiceReturn::success(
                 data: $cameras
             );
         } catch (\Exception $exception) {
             LogHelper::error(
                 message: "Lỗi ShowroomService@cameraLibrary",
-                ex: $exception
+                ex: $excepti
             );
             return ServiceReturn::success(
                 data: []

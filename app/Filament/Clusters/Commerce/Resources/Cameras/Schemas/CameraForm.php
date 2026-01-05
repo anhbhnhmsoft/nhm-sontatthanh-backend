@@ -29,7 +29,7 @@ class CameraForm
                                     ->maxLength(255)
                                     ->validationMessages([
                                         'required' => 'Tên camera không được để trống',
-                                        'maxLength' => 'Tên camera không được vượt quá 255 ký tự',
+                                        'max' => 'Tên camera không được vượt quá 255 ký tự',
                                     ]),
                                 TextInput::make('description')
                                     ->label('Mô tả')
@@ -45,7 +45,7 @@ class CameraForm
                                     ->label('Mã bảo mật')
                                     ->maxLength(255)
                                     ->validationMessages([
-                                        'maxLength' => 'Mã bảo mật không được vượt quá 255 ký tự',
+                                        'max' => 'Mã bảo mật không được vượt quá 255 ký tự',
                                     ]),
                                 TextInput::make('device_id')
                                     ->label('Số serial thiết bị')
@@ -53,7 +53,7 @@ class CameraForm
                                     ->maxLength(255)
                                     ->validationMessages([
                                         'required' => 'Thiết bị không được để trống',
-                                        'maxLength' => 'Thiết bị không được vượt quá 255 ký tự',
+                                        'max' => 'Thiết bị không được vượt quá 255 ký tự',
                                     ]),
                                 TextInput::make('channel_id')
                                     ->label('Số kênh ~ số mắt của thiết bị'),

@@ -21,13 +21,13 @@ class ProductResource extends JsonResource
             'description' => $this->description,
             'brand' => $this->whenLoaded('brand', function () {
                 return [
-                    'id' => $this->brand->id,
+                    'id' => (string) $this->brand->id,
                     'name' => $this->brand->name,
                 ];
             }),
             'line' => $this->whenLoaded('line', function () {
                 return [
-                    'id' => $this->line->id,
+                    'id' => (string) $this->line->id,
                     'name' => $this->line->name,
                 ];
             }),

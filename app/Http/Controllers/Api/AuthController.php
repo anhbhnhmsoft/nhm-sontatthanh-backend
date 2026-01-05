@@ -296,4 +296,48 @@ class AuthController extends BaseController
             $result->getMessage()
         );
     }
+
+    public function editAvatar(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'file' => 'required|image|mimes:jpeg,png,jpg|max:102400'
+        ],[
+            'file.required' => 'Hình ảnh avatar không được để trống',
+            'file.image' => 'Hình ảnh avatar phải là file hình ảnh',
+            'file.mimes' => 'Hình ảnh avatar phải có định dạng jpeg, png, jpg',
+            'file.max' => 'Hình ảnh avatar không được vượt quá 10MB',
+        ]);
+        $result = $this->authService->editInfoAvatar(
+            file: $data['file'],
+        );
+        if ($result->isError()) {
+            return $this->sendError(
+                message: $result->getMessage(),
+            );
+        }
+        return $this->sendSuccess(
+            data: [
+                'user' => new UserResource($result->getData()),
+            ],
+        );
+    }
+
+    /**
+     * Xóa avatar người dùng.
+     * @return JsonResponse
+     */
+    public function deleteAvatar(): JsonResponse
+    {
+        $result = $this->authService->deleteAvatar();
+        if ($result->isError()) {
+            return $this->sendError(
+                message: $result->getMessage(),
+            );
+        }
+        return $this->sendSuccess(
+            data: [
+                'user' => new UserResource($result->getData()),
+            ],
+        );
+    }
 }

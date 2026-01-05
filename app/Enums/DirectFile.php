@@ -12,4 +12,9 @@ enum DirectFile: string
     case BRANDS = 'brands';
     case CATEGORIES = 'categories';
     case CAMERAS = 'cameras';
+
+    public static function makePathById(DirectFile $type, string $id): string
+    {
+        return $type->value . "/" . $id;
+    }
 }

@@ -32,14 +32,14 @@ class ShowroomForm
                                     ->maxLength(255)
                                     ->validationMessages([
                                         'required' => 'Vui lòng nhập tên showroom',
-                                        'maxLength' => 'Tên showroom không được vượt quá 255 ký tự',
+                                        'max' => 'Tên showroom không được vượt quá 255 ký tự',
                                     ]),
                                 TextInput::make('email')
                                     ->label('Email')
                                     ->maxLength(255)
                                     ->email()
                                     ->validationMessages([
-                                        'maxLength' => 'Email không được vượt quá 255 ký tự',
+                                        'max' => 'Email không được vượt quá 255 ký tự',
                                         'email' => 'Email không hợp lệ',
                                     ]),
                             ]),
@@ -53,14 +53,14 @@ class ShowroomForm
                             ->label('Mô tả')
                             ->maxLength(255)
                             ->validationMessages([
-                                'maxLength' => 'Mô tả không được vượt quá 255 ký tự',
+                                'max' => 'Mô tả không được vượt quá 255 ký tự',
                             ]),
                         TextInput::make('weblink')
                             ->label('Link website')
                             ->url()
                             ->maxLength(255)
                             ->validationMessages([
-                                'maxLength' => 'Link website không được vượt quá 255 ký tự',
+                                'max' => 'Link website không được vượt quá 255 ký tự',
                                 'url' => 'Link website không hợp lệ',
                             ]),
                     ]),
@@ -116,7 +116,7 @@ class ShowroomForm
                                             ->maxLength(255)
                                             ->validationMessages([
                                                 'required' => 'Vui lòng nhập tên hotline',
-                                                'maxLength' => 'Tên hotline không được vượt quá 255 ký tự',
+                                                'max' => 'Tên hotline không được vượt quá 255 ký tự',
                                             ]),
                                         TextInput::make('phone')
                                             ->label('Số điện thoại')
@@ -126,7 +126,7 @@ class ShowroomForm
                                             ->tel()
                                             ->validationMessages([
                                                 'required' => 'Vui lòng nhập số điện thoại',
-                                                'maxLength' => 'Số điện thoại không được vượt quá 255 ký tự',
+                                                'max' => 'Số điện thoại không được vượt quá 255 ký tự',
                                                 'regex' => 'Số điện thoại không hợp lệ',
                                             ]),
                                     ])

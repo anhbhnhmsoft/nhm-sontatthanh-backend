@@ -395,10 +395,11 @@ class VideoLiveService
 
         $code = $response['result']['code'] ?? 'UNKNOWN';
 
+        LogHelper::error("Khởi động live device {$deviceId} với response: " . (json_encode($response)), null, $response);
         // Live stream đã được kích hoạt trước đó
-        if ($code === 'LV1001') {
+        if ($code == 'LV1001') {
             $device->update(['is_active' => true]);
-            return ServiceReturn::error('Thiết bị đã được kích hoạt');
+            return $this->viewLive($deviceId);
         }
 
         // Khởi động thành công
@@ -464,9 +465,9 @@ class VideoLiveService
         if ($this->isSuccessResponse($response)) {
             $resultData = $response['result']['data'];
             $stream = $resultData['streams'][0];
-
+            $baseDomain = "http://cmgw-sg.easy4ipcloud.com:8888/";
             $broadcast = [
-                'coverUrl'   => $stream['coverUrl'],
+                'coverUrl'   => $baseDomain . $stream['coverUrl'],
                 'streamId'   => $stream['streamId'],
                 'hls'        => $stream['hls'],
                 'liveToken'  => $stream['liveToken'],
