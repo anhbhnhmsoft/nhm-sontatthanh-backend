@@ -76,3 +76,4 @@ Route::prefix('notification')->middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::get('hotlines', [ShowroomController::class, 'hotlines']);
+Route::get('config/{slug}', [ShowroomController::class, 'config']);

@@ -152,6 +152,24 @@ class DatabaseSeeder extends Seeder
                     'config_type' => ConfigType::KEY->value,
                     'description' => 'App Secret',
                 ],
+                [
+                    'config_key' => ConfigKey::APP_REMINDER->value,
+                    'config_value' => '',
+                    'config_type' => ConfigType::TEXT->value,
+                    'description' => 'Lời nhắc ',
+                ],
+                [
+                    'config_key' => ConfigKey::APP_REMINDER_NAME->value,
+                    'config_value' => '',
+                    'config_type' => ConfigType::TEXT->value,
+                    'description' => 'Tên người giữ lời nhắc ',
+                ],
+                [
+                    'config_key' => ConfigKey::APP_REMINDER_POSITION->value,
+                    'config_value' => '',
+                    'config_type' => ConfigType::TEXT->value,
+                    'description' => 'Vị trí người giữ lời nhắc',
+                ],
             ];
             foreach ($configs as $config) {
                 Config::query()->updateOrCreate(

@@ -25,6 +25,12 @@ class BannerForm
                                 'required' => 'Vui lòng nhập tên banner',
                                 'max' => 'Tên banner không được vượt quá 255 ký tự',
                             ]),
+                        TextInput::make('source')
+                            ->label('Nguồn')
+                            ->maxLength(255)
+                            ->validationMessages([
+                                'max' => 'Đường dẫn không được vượt quá 255 ký tự'
+                            ]),
                         FileUpload::make('image')
                             ->label('Hình ảnh')
                             ->required()

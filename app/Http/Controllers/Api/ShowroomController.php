@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Core\Cache\CacheKey;
 use App\Core\Cache\Caching;
 use App\Core\Controller\BaseController;
+use App\Enums\ConfigKey;
 use App\Http\Resources\CameraResource;
 use App\Http\Resources\ShowroomResource;
+use App\Service\ConfigService;
 use App\Service\ShowroomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +16,8 @@ use Illuminate\Support\Facades\Auth;
 class ShowroomController extends BaseController
 {
     public function __construct(
-        protected ShowroomService $showroomService
+        protected ShowroomService $showroomService,
+        protected ConfigService  $configService,
     ) {}
 
     /**
@@ -123,5 +126,23 @@ class ShowroomController extends BaseController
         }
         $data = $result->getData();
         return $this->sendSuccess(data: ShowroomResource::collection($data)->response()->getData(true)['data'] );
+    }
+
+    /**
+     * Lấy cấu hình
+     * @param string $slug
+     * @return JsonResponse
+     * */
+    public function config(string $slug) : JsonResponse
+    {
+        $slug = strtoupper($slug);
+        $slug = ConfigKey::tryFrom($slug);
+        $result = $this->configService->getConfigByKey($slug);
+
+        if( $result->isError() ){
+            return $this->sendError($result->getMessage());
+        }
+        $data = $result->getData();
+        return $this->sendSuccess(data: $data);
     }
 }
