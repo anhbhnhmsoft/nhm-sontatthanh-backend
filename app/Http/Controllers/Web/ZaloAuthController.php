@@ -6,6 +6,7 @@ use App\Core\Cache\CacheKey;
 use App\Core\Cache\Caching;
 use App\Core\Controller\BaseController;
 use App\Core\LogHelper;
+use App\Http\Resources\UserResource;
 use App\Service\AuthService;
 use App\Service\ZaloService;
 use Illuminate\Http\JsonResponse;
@@ -98,7 +99,7 @@ class ZaloAuthController extends BaseController
 
         $tokenUser = $result->getData()['token'];
         $user = $result->getData()['user'];
-
+        $user = UserResource::make($user);
         // Redirect về mobile app với token
         return $this->redirectToMobileApp($tokenUser, 'Đăng nhập thành công', $user, $ip, $token);
     }

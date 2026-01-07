@@ -53,7 +53,9 @@ class UserResource extends JsonResource
             'name' => $this->name ?? null,
             'email' => $this->email ?? null,
             'phone' => $this->phone ?? null,
-            'avatar' => (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) ? $this->avatar : ($this->avatar ? Storage::disk('public')->url($this->avatar) : null),
+            'avatar' => str($this->avatar)->startsWith(['http://', 'https://'])
+                ? $this->avatar
+                : ($this->avatar ? Storage::disk('public')->url($this->avatar) : null),
             'referral_code' => $this->referral_code ?? null,
             'role' => $this->role,
             'joined_at' => $this->joined_at,
