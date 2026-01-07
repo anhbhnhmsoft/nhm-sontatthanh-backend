@@ -17,7 +17,6 @@ class Banner extends Model
         'position',
         'source'
     ];
-
     protected $casts = [
         'is_active' => 'boolean',
     ];

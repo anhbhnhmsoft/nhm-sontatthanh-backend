@@ -20,6 +20,7 @@ Route::prefix('auth')->group(function () {
         Route::post('forgot-password/verify', [AuthController::class, 'verifyForgotPasswordOtp']);
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('zalo-authenticate', [AuthController::class, 'zaloAuthenticate']);
+        Route::post('apple-authenticate', [AuthController::class, 'appleAuthenticate']);
         Route::post('keep-zalo-auth-token', [\App\Http\Controllers\Web\ZaloAuthController::class, 'keepZaloAuthToken']);
         Route::post('verify-zalo-auth-token', [\App\Http\Controllers\Web\ZaloAuthController::class, 'verifyZaloAuthToken']);
     });
@@ -77,3 +78,4 @@ Route::prefix('notification')->middleware(['auth:sanctum'])->group(function () {
 
 Route::get('hotlines', [ShowroomController::class, 'hotlines']);
 Route::get('config/{slug}', [ShowroomController::class, 'config']);
+Route::post('get-error', [AuthController::class, 'getError']);

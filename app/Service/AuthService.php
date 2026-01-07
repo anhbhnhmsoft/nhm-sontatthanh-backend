@@ -31,9 +31,7 @@ class AuthService extends BaseService
     public function __construct(
         protected User        $userModel,
         protected ZaloService $zaloService,
-    )
-    {
-    }
+    ) {}
 
     /**
      * Authenticate with Zalo (Unified Login/Register)
@@ -78,16 +76,6 @@ class AuthService extends BaseService
             if (!$user->is_active) {
                 return ServiceReturn::error('Tài khoản của bạn đang bị khóa');
             }
-//            $notifcation = new SendNotificationJob(
-//                userIds: [ $user->id],
-//                payload: new NotificationPayload(
-//                    title: 'Xác thực Zalo thành công',
-//                    description: 'Chào mừng ' . $user->name . ' quay lại ứng dụng!',
-//                    type: UserNotificationType::ZALO_AUTH_SUCCESS,
-//                    data: [],
-//                ),
-//            );
-//            $notifcation->dispatch();
             $tokenAuth = $this->createTokenAuth($user);
             Caching::setCache(
                 key: CacheKey::CACHE_ZALO_AUTH_TOKEN,
@@ -105,6 +93,102 @@ class AuthService extends BaseService
         } catch (\Throwable $th) {
             LogHelper::error('AuthService@authenticateWithZalo error: ' . $th->getMessage());
             return ServiceReturn::error('Có lỗi xảy ra khi xác thực Zalo');
+        }
+    }
+
+    /**
+     * Authenticate with Apple (Unified Login/Register)
+     * @param array $tokenData - Response from Apple (contains id_token, etc.)
+     * @param string $ip
+     * @param string $token - token xác thực của client
+     * @param array $fullName - mảng chứa thông tin tên (givenName, familyName)
+     * @return ServiceReturn
+     */
+    public function authenticateWithApple(array $tokenData, string $ip, string $token, array $fullName): ServiceReturn
+    {
+        try {
+            $idToken = $tokenData['id_token'];
+            $parts = explode('.', $idToken);
+            if (count($parts) != 3) {
+                return ServiceReturn::error('Apple ID Token không hợp lệ');
+            }
+
+            $payload = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', $parts[1]))), true);
+            LogHelper::debug('Apple ID Token Payload: ', $payload);
+            if (!$payload) {
+                return ServiceReturn::error('Không thể phân tích Apple ID Token');
+            }
+
+            $appleId = $payload['sub'];
+            $email = $payload['email'] ?? null;
+
+            $user = $this->userModel->where('apple_id', $appleId)->first();
+
+            if (!$user && $email) {
+                $user = $this->userModel->where('email', $email)->first();
+                if ($user) {
+                    // Link existing user
+                    $user->apple_id = $appleId;
+                    $user->save();
+                }
+            }
+
+            if (!$user) {
+                $sales = $this->userModel->where('role', UserRole::SALE->value)->get();
+                $name = 'Apple User';
+                if (!empty($fullName) && isset($fullName['givenName']) && isset($fullName['familyName'])) {
+                    $name = $fullName['givenName'] . ' ' . $fullName['familyName'];
+                } elseif (!empty($fullName) && isset($fullName['givenName'])) {
+                    $name = $fullName['givenName'];
+                } elseif ($email) {
+                    $name = strstr($email, '@', true);
+                }
+
+                $data = [
+                    'apple_id' => $appleId,
+                    'email' => $email,
+                    'phone' => null,
+                    'name' => $name,
+                    'role' => UserRole::CTV->value,
+                    'joined_at' => now(),
+                    'is_active' => true,
+                    'avatar' => null,
+                ];
+
+                if ($sales->isNotEmpty()) {
+                    $randomSale = $sales->random();
+                    $data['sale_id'] = $randomSale->id;
+                }
+
+                $user = $this->userModel->create($data);
+            }
+
+            if (!$user->is_active) {
+                return ServiceReturn::error('Tài khoản của bạn đang bị khóa');
+            }
+
+            $tokenAuth = $this->createTokenAuth($user);
+            // Hash the token to prevent "value too long" error in cache key
+            $hashedTokenKey = md5($token);
+
+            Caching::setCache(
+                key: CacheKey::CACHE_APPLE_AUTH_TOKEN,
+                value: [
+                    'token' => $tokenAuth,
+                    'user' => $user,
+                ],
+                uniqueKey: $ip . '_' . $hashedTokenKey,
+                expire: 60 * 5,
+            );
+
+            // Return the Sanctum token (tokenAuth), not the Identity Token
+            return ServiceReturn::success([
+                'user' => $user,
+                'token' => $tokenAuth
+            ], 'Xác thực Apple thành công');
+        } catch (\Throwable $th) {
+            LogHelper::error('AuthService@authenticateWithApple error: ' . $th->getMessage());
+            return ServiceReturn::error('Có lỗi xảy ra khi xác thực Apple');
         }
     }
 
@@ -195,8 +279,7 @@ class AuthService extends BaseService
         string $phone,
         string $password,
         string $name,
-    ): ServiceReturn
-    {
+    ): ServiceReturn {
         try {
             if (!$phone || !$password || !$name) {
                 return ServiceReturn::error(message: 'Nhập đầy đủ thông tin');
