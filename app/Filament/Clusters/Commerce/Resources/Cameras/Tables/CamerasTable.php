@@ -4,6 +4,7 @@ namespace App\Filament\Clusters\Commerce\Resources\Cameras\Tables;
 
 use App\Core\Cache\CacheKey;
 use App\Core\Cache\Caching;
+use App\Core\LogHelper;
 use App\Models\Camera;
 use App\Service\VideoLiveService;
 use Filament\Actions\Action;
@@ -96,17 +97,24 @@ class CamerasTable
                         ->action(function (Camera $record) {
                             /** @var VideoLiveService $videoLiveService */
                             $videoLiveService = app(VideoLiveService::class);
-                            $bindRes = $videoLiveService->bindDevice($record->device_id, $record->security_code);
-                            if ($bindRes->isError()) {
-                                Notification::make()
-                                    ->title('Lỗi')
-                                    ->body('Không thể kiểm tra kết nối: ' . $bindRes->getMessage())
-                                    ->danger()
-                                    ->send();
-                                return;
+                            if (!$record->bind_status) {
+                                $bindRes = $videoLiveService->bindDevice($record->device_id, $record->security_code);
+                                if ($bindRes->isError()) {
+                                    Notification::make()
+                                        ->title('Lỗi')
+                                        ->body('Không thể kiểm tra kết nối: ' . $bindRes->getMessage())
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
                             }
+
                             $channelRes = $videoLiveService->getDeviceChannelInfo($record->device_id);
+                            LogHelper::debug('Kiểm tra kết nối camera', [
+                                'channel_id' => $channelRes->getData(),
+                            ]);
                             $res = $videoLiveService->startLive($record->device_id);
+
                             if ($channelRes->isError()) {
                                 Notification::make()
                                     ->title('Lỗi')
@@ -117,9 +125,9 @@ class CamerasTable
                             }
                             if ($res->isError()) {
                                 Notification::make()
-                                    ->title('Lỗi')
+                                    ->title('Cảnh báo')
                                     ->body('Không thể bắt đầu stream: ' . $res->getMessage())
-                                    ->danger()
+                                    ->warning()
                                     ->send();
                                 return;
                             }

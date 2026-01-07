@@ -150,7 +150,7 @@ class ShowroomService extends BaseService
     {
         try {
 
-            $cameras = $this->cameraModel->where('is_active', true)->where('bind_status', true)->where('enable', true)->get();
+            $cameras = $user->cameras()->where('is_active', true)->where('bind_status', true)->where('enable', true)->get();
             return ServiceReturn::success(
                 data: $cameras
             );
@@ -162,6 +162,20 @@ class ShowroomService extends BaseService
             return ServiceReturn::success(
                 data: []
             );
+        }
+    }
+
+    /**
+     * @return ServiceReturn
+     */
+    public function getHotlines(): ServiceReturn
+    {
+        try {
+            $query = $this->showroomModel->query()->select(['id', 'name', 'address', 'email', 'logo', 'hotlines'])->get();
+            return ServiceReturn::success(data: $query);
+        } catch (\Exception $exception) {
+            LogHelper::error('ShowroomService@getHotlines' . $exception->getMessage(), ex: $exception);
+            return ServiceReturn::error('Có lỗi xảy ra vui lòng thử lại sau');
         }
     }
 }

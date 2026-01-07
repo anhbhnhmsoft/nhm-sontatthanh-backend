@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Core\Cache\CacheKey;
 use App\Core\Cache\Caching;
 use App\Core\Controller\BaseController;
+use App\Core\LogHelper;
 use App\Http\Requests\Auth\EditProfileRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -13,6 +14,7 @@ use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Service\AuthService;
+use App\Service\AppleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,10 +22,12 @@ use Illuminate\Support\Facades\Auth;
 class AuthController extends BaseController
 {
     protected AuthService $authService;
+    protected AppleService $appleService;
 
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $authService, AppleService $appleService)
     {
         $this->authService = $authService;
+        $this->appleService = $appleService;
     }
 
     /**
@@ -276,7 +280,7 @@ class AuthController extends BaseController
             }
         }
 
-        $result = $this->authService->authenticateWithZalo($accessToken, $request->ip());
+        $result = $this->authService->authenticateWithZalo($accessToken, $request->ip(), $accessToken);
 
         if ($result->isError()) {
             return $this->sendError(
@@ -294,6 +298,105 @@ class AuthController extends BaseController
                 'token' => $token,
             ],
             $result->getMessage()
+        );
+    }
+
+    /**
+     * Xác thực bằng Apple (Native SDK)
+     */
+    public function appleAuthenticate(Request $request): JsonResponse
+    {
+        $request->validate([
+            'identityToken' => 'required|string',
+            'fullName' => 'nullable|array',
+            'email' => 'nullable|string|email',
+        ], [
+            'identityToken.required' => 'Identity Token không được để trống',
+            'fullName.array' => 'Full Name phải là mảng',
+            'email.email' => 'Email không hợp lệ',
+        ]);
+
+        $identityToken = $request->input('identityToken');
+        $fullName = $request->input('fullName');
+        $email = $request->input('email');
+
+        $payload = $this->appleService->verifyIdentityToken($identityToken);
+        if (!$payload) {
+            return $this->sendError(
+                'Identity Token không hợp lệ',
+                400,
+            );
+        }
+        $result = $this->authService->authenticateWithApple(['id_token' => $identityToken], $request->ip(), $identityToken, $fullName);
+
+        if ($result->isError()) {
+            return $this->sendError(
+                $result->getMessage(),
+                400,
+            );
+        }
+
+        $user = $result->getData()['user'];
+        $token = $result->getData()['token'];
+
+        return $this->sendSuccess(
+            [
+                'user' => UserResource::make($user),
+                'token' => $token,
+            ],
+            $result->getMessage()
+        );
+    }
+
+    public function editAvatar(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'file' => 'required|image|mimes:jpeg,png,jpg|max:102400'
+        ], [
+            'file.required' => 'Hình ảnh avatar không được để trống',
+            'file.image' => 'Hình ảnh avatar phải là file hình ảnh',
+            'file.mimes' => 'Hình ảnh avatar phải có định dạng jpeg, png, jpg',
+            'file.max' => 'Hình ảnh avatar không được vượt quá 10MB',
+        ]);
+        $result = $this->authService->editInfoAvatar(
+            file: $data['file'],
+        );
+        if ($result->isError()) {
+            return $this->sendError(
+                message: $result->getMessage(),
+            );
+        }
+        return $this->sendSuccess(
+            data: [
+                'user' => new UserResource($result->getData()),
+            ],
+        );
+    }
+
+    /**
+     * Xóa avatar người dùng.
+     * @return JsonResponse
+     */
+    public function deleteAvatar(): JsonResponse
+    {
+        $result = $this->authService->deleteAvatar();
+        if ($result->isError()) {
+            return $this->sendError(
+                message: $result->getMessage(),
+            );
+        }
+        return $this->sendSuccess(
+            data: [
+                'user' => new UserResource($result->getData()),
+            ],
+        );
+    }
+
+    public function getError(Request $request): JsonResponse
+    {
+        LogHelper::error('Get Error: ',null ,$request->all());
+        return $this->sendError(
+            message: 'Lỗi không xác định',
         );
     }
 }

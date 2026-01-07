@@ -12,21 +12,24 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::middleware(['throttle:5,1'])->group(function () {
-            Route::post('login', [AuthController::class, 'login']);
-            Route::post('register', [AuthController::class, 'register']);
-            Route::post('resend', [AuthController::class, 'resendOtp']);
-            Route::post('verify', [AuthController::class, 'verifyOtp']);
-            Route::post('forgot-password/send', [AuthController::class, 'sendForgotPasswordOtp']);
-            Route::post('forgot-password/verify', [AuthController::class, 'verifyForgotPasswordOtp']);
-            Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
-            Route::post('zalo-authenticate', [AuthController::class, 'zaloAuthenticate']);
-            Route::post('keep-zalo-auth-token', [\App\Http\Controllers\Web\ZaloAuthController::class, 'keepZaloAuthToken']);
-            Route::post('verify-zalo-auth-token', [\App\Http\Controllers\Web\ZaloAuthController::class, 'verifyZaloAuthToken']);
-        });
+        Route::post('login', [AuthController::class, 'login']);
+        Route::post('register', [AuthController::class, 'register']);
+        Route::post('resend', [AuthController::class, 'resendOtp']);
+        Route::post('verify', [AuthController::class, 'verifyOtp']);
+        Route::post('forgot-password/send', [AuthController::class, 'sendForgotPasswordOtp']);
+        Route::post('forgot-password/verify', [AuthController::class, 'verifyForgotPasswordOtp']);
+        Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('zalo-authenticate', [AuthController::class, 'zaloAuthenticate']);
+        Route::post('apple-authenticate', [AuthController::class, 'appleAuthenticate']);
+        Route::post('keep-zalo-auth-token', [\App\Http\Controllers\Web\ZaloAuthController::class, 'keepZaloAuthToken']);
+        Route::post('verify-zalo-auth-token', [\App\Http\Controllers\Web\ZaloAuthController::class, 'verifyZaloAuthToken']);
+    });
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
         Route::post('edit-profile', [AuthController::class, 'editProfile']);
+        Route::post('edit-avatar', [AuthController::class, 'editAvatar']);
+        Route::delete('delete-avatar', [AuthController::class, 'deleteAvatar']);
     });
 });
 
@@ -72,3 +75,7 @@ Route::prefix('notification')->middleware(['auth:sanctum'])->group(function () {
     // Lấy device token
     Route::post('device-token', [NotificationController::class, 'deviceToken']);
 });
+
+Route::get('hotlines', [ShowroomController::class, 'hotlines']);
+Route::get('config/{slug}', [ShowroomController::class, 'config']);
+Route::post('get-error', [AuthController::class, 'getError']);

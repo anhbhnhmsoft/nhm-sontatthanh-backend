@@ -30,11 +30,13 @@ class ProductsTable
                 ImageColumn::make('images')
                     ->label('Hình ảnh')
                     ->disk('public'),
-                TextColumn::make('description') 
+                TextColumn::make('description')
                     ->label('Mô tả')
+                    ->formatStateUsing(fn (string $state): string => strip_tags($state))
+                    ->words(10)
                     ->limit(100)
-                    ->html()
-                    ->searchable(),
+                    ->searchable()
+                    ->tooltip(fn ($state) => strip_tags($state)),
                 TextColumn::make('price')
                     ->label('Giá')
                     ->numeric()

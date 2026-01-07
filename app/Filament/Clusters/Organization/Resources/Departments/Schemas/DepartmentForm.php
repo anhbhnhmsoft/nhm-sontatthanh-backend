@@ -22,7 +22,7 @@ class DepartmentForm
                             ->label('Tên phòng ban')
                             ->validationMessages([
                                 'required' => 'Vui lòng nhập tên phòng ban',
-                                'max_length' => 'Tên phòng ban không được vượt quá 255 ký tự',
+                                'max' => 'Tên phòng ban không được vượt quá 255 ký tự',
                             ]),
                         Select::make('users')
                             ->relationship(

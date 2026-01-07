@@ -21,6 +21,7 @@ class BannerResource extends JsonResource
             'is_active' => $this->is_active,
             'image' => Storage::disk('public')->url($this->image) ?? null,
             'position' => $this->position,
+            'source' => $this->source ?? null,
         ];
     }
 }

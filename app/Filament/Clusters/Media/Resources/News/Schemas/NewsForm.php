@@ -45,7 +45,7 @@ class NewsForm
                                     ->label('Mô tả')
                                     ->maxLength(255)
                                     ->validationMessages([
-                                        'max_length' => 'Mô tả không được vượt quá 255 ký tự',
+                                        'max' => 'Mô tả không được vượt quá 255 ký tự',
                                     ]),
                                 Select::make('type')
                                     ->label('Loại tin tức')
@@ -58,7 +58,7 @@ class NewsForm
                                     ->label('Nguồn')
                                     ->maxLength(255)
                                     ->validationMessages([
-                                        'max_length' => 'Nguồn không được vượt quá 255 ký tự',
+                                        'max' => 'Nguồn không được vượt quá 255 ký tự',
                                     ]),
                                 DateTimePicker::make('published_at')
                                     ->label('Ngày đăng')

@@ -29,7 +29,7 @@ class NotificationsTable
                     ->limit(50),
                 \Filament\Tables\Columns\TextColumn::make('type')
                     ->label('Loại')
-                    ->formatStateUsing(fn($state) => \App\Enums\UserNotificationType::label((int) $state))
+                    ->formatStateUsing(fn($state) => \App\Enums\UserNotificationType::label((int)$state))
                     ->badge(),
                 \Filament\Tables\Columns\TextColumn::make('created_at')
                     ->label('Ngày tạo')
@@ -61,13 +61,18 @@ class NotificationsTable
                             ->label('Loại thông báo')
                             ->options(\App\Enums\UserNotificationType::getOptions())
                             ->required(),
+                        \Filament\Forms\Components\Toggle::make('send_to_all')
+                            ->label('Gửi cho tất cả người dùng')
+                            ->reactive() // Giúp giao diện phản ứng ngay khi bấm
+                            ->default(false),
                         \Filament\Forms\Components\Select::make('user_ids')
-                            ->label('Người nhận')
+                            ->label('Người nhận cụ thể')
                             ->multiple()
                             ->options(\App\Models\User::all()->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->hidden(fn($get) => $get('send_to_all'))
+                            ->required(fn($get) => !$get('send_to_all')),
                     ])
                     ->action(function (array $data) {
                         $payload = new \App\Http\DTO\NotificationPayload(
@@ -77,13 +82,17 @@ class NotificationsTable
                             data: []
                         );
 
+                        $userIds = $data['send_to_all']
+                            ? \App\Models\User::pluck('id')->toArray()
+                            : $data['user_ids'];
+
                         \App\Jobs\SendNotificationJob::dispatch(
-                            $data['user_ids'],
+                            $userIds,
                             $payload
                         );
 
                         \Filament\Notifications\Notification::make()
-                            ->title('Đã gửi thông báo thành công')
+                            ->title('Đã đẩy lệnh gửi thông báo thành công')
                             ->success()
                             ->send();
                     }),

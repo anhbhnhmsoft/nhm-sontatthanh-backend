@@ -5,20 +5,24 @@ namespace App\Http\Controllers\Api;
 use App\Core\Cache\CacheKey;
 use App\Core\Cache\Caching;
 use App\Core\Controller\BaseController;
+use App\Enums\ConfigKey;
 use App\Http\Resources\CameraResource;
 use App\Http\Resources\ShowroomResource;
+use App\Service\ConfigService;
 use App\Service\ShowroomService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class ShowroomController extends BaseController
 {
     public function __construct(
-        protected ShowroomService $showroomService
+        protected ShowroomService $showroomService,
+        protected ConfigService  $configService,
     ) {}
 
     /**
      * Get paginated list of showrooms
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function list()
@@ -50,7 +54,7 @@ class ShowroomController extends BaseController
     /**
      * Get showroom detail by ID
      * Cache strategy: Cache each showroom detail for 1 hours (static data)
-     * 
+     *
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
@@ -86,7 +90,7 @@ class ShowroomController extends BaseController
 
     /**
      * Get camera library for authenticated user
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function cameraLibrary()
@@ -109,5 +113,36 @@ class ShowroomController extends BaseController
         return $this->sendSuccess(
             data: $data,
         );
+    }
+
+    /**
+     * @return JsonResponse ;
+     */
+    public function hotlines() : JsonResponse
+    {
+        $result = $this->showroomService->getHotlines();
+        if( $result->isError() ){
+            return $this->sendError($result->getMessage());
+        }
+        $data = $result->getData();
+        return $this->sendSuccess(data: ShowroomResource::collection($data)->response()->getData(true)['data'] );
+    }
+
+    /**
+     * Lấy cấu hình
+     * @param string $slug
+     * @return JsonResponse
+     * */
+    public function config(string $slug) : JsonResponse
+    {
+        $slug = strtoupper($slug);
+        $slug = ConfigKey::tryFrom($slug);
+        $result = $this->configService->getConfigByKey($slug);
+
+        if( $result->isError() ){
+            return $this->sendError($result->getMessage());
+        }
+        $data = $result->getData();
+        return $this->sendSuccess(data: $data);
     }
 }

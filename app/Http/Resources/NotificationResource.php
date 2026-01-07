@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use function Symfony\Component\String\s;
 
 class NotificationResource extends JsonResource
 {
@@ -15,7 +16,7 @@ class NotificationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => (string) $this->id,
             'title' => $this->title,
             'description' => $this->description,
             'data' => $this->data,

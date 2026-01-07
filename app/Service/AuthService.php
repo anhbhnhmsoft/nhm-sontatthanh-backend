@@ -9,11 +9,15 @@ use App\Core\Service\BaseService;
 use App\Core\Service\ServiceException;
 use App\Core\Service\ServiceReturn;
 use App\Enums\DirectFile;
+use App\Enums\UserNotificationType;
 use App\Enums\UserRole;
+use App\Http\DTO\NotificationPayload;
+use App\Jobs\SendNotificationJob;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AuthService extends BaseService
@@ -25,7 +29,7 @@ class AuthService extends BaseService
     protected int $registerTimeout = 60 * 60;  // Thời gian chờ sau khi đăng ký
 
     public function __construct(
-        protected User $userModel,
+        protected User        $userModel,
         protected ZaloService $zaloService,
     ) {}
 
@@ -51,7 +55,8 @@ class AuthService extends BaseService
 
             $user = $this->userModel->where('zalo_id', $zaloId)->first();
             if (!$user) {
-                $user = $this->userModel->create([
+                $sales = $this->userModel->where('role', UserRole::SALE->value)->get();
+                $data = [
                     'zalo_id' => $zaloId,
                     'phone' => null,
                     'name' => $name,
@@ -59,21 +64,26 @@ class AuthService extends BaseService
                     'joined_at' => now(),
                     'is_active' => true,
                     'avatar' => $avatarUrl,
-                ]);
+                ];
+                if ($sales->isNotEmpty()) {
+                    $randomSale = $sales->random();
+                    $data['sale_id'] = $randomSale->id;
+                }
+
+                $user = $this->userModel->create($data);
             }
 
             if (!$user->is_active) {
                 return ServiceReturn::error('Tài khoản của bạn đang bị khóa');
             }
-
             $tokenAuth = $this->createTokenAuth($user);
             Caching::setCache(
-                key:CacheKey::CACHE_ZALO_AUTH_TOKEN,
+                key: CacheKey::CACHE_ZALO_AUTH_TOKEN,
                 value: [
                     'token' => $tokenAuth,
                     'user' => $user,
                 ],
-                uniqueKey: $ip.$token,
+                uniqueKey: $ip . $token,
                 expire: 60 * 5,
             );
             return ServiceReturn::success([
@@ -83,6 +93,102 @@ class AuthService extends BaseService
         } catch (\Throwable $th) {
             LogHelper::error('AuthService@authenticateWithZalo error: ' . $th->getMessage());
             return ServiceReturn::error('Có lỗi xảy ra khi xác thực Zalo');
+        }
+    }
+
+    /**
+     * Authenticate with Apple (Unified Login/Register)
+     * @param array $tokenData - Response from Apple (contains id_token, etc.)
+     * @param string $ip
+     * @param string $token - token xác thực của client
+     * @param array $fullName - mảng chứa thông tin tên (givenName, familyName)
+     * @return ServiceReturn
+     */
+    public function authenticateWithApple(array $tokenData, string $ip, string $token, array $fullName): ServiceReturn
+    {
+        try {
+            $idToken = $tokenData['id_token'];
+            $parts = explode('.', $idToken);
+            if (count($parts) != 3) {
+                return ServiceReturn::error('Apple ID Token không hợp lệ');
+            }
+
+            $payload = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', $parts[1]))), true);
+            LogHelper::debug('Apple ID Token Payload: ', $payload);
+            if (!$payload) {
+                return ServiceReturn::error('Không thể phân tích Apple ID Token');
+            }
+
+            $appleId = $payload['sub'];
+            $email = $payload['email'] ?? null;
+
+            $user = $this->userModel->where('apple_id', $appleId)->first();
+
+            if (!$user && $email) {
+                $user = $this->userModel->where('email', $email)->first();
+                if ($user) {
+                    // Link existing user
+                    $user->apple_id = $appleId;
+                    $user->save();
+                }
+            }
+
+            if (!$user) {
+                $sales = $this->userModel->where('role', UserRole::SALE->value)->get();
+                $name = 'Apple User';
+                if (!empty($fullName) && isset($fullName['givenName']) && isset($fullName['familyName'])) {
+                    $name = $fullName['givenName'] . ' ' . $fullName['familyName'];
+                } elseif (!empty($fullName) && isset($fullName['givenName'])) {
+                    $name = $fullName['givenName'];
+                } elseif ($email) {
+                    $name = strstr($email, '@', true);
+                }
+
+                $data = [
+                    'apple_id' => $appleId,
+                    'email' => $email,
+                    'phone' => null,
+                    'name' => $name,
+                    'role' => UserRole::CTV->value,
+                    'joined_at' => now(),
+                    'is_active' => true,
+                    'avatar' => null,
+                ];
+
+                if ($sales->isNotEmpty()) {
+                    $randomSale = $sales->random();
+                    $data['sale_id'] = $randomSale->id;
+                }
+
+                $user = $this->userModel->create($data);
+            }
+
+            if (!$user->is_active) {
+                return ServiceReturn::error('Tài khoản của bạn đang bị khóa');
+            }
+
+            $tokenAuth = $this->createTokenAuth($user);
+            // Hash the token to prevent "value too long" error in cache key
+            $hashedTokenKey = md5($token);
+
+            Caching::setCache(
+                key: CacheKey::CACHE_APPLE_AUTH_TOKEN,
+                value: [
+                    'token' => $tokenAuth,
+                    'user' => $user,
+                ],
+                uniqueKey: $ip . '_' . $hashedTokenKey,
+                expire: 60 * 5,
+            );
+
+            // Return the Sanctum token (tokenAuth), not the Identity Token
+            return ServiceReturn::success([
+                'user' => $user,
+                'token' => $tokenAuth
+            ], 'Xác thực Apple thành công');
+        } catch (\Throwable $th) {
+            LogHelper::error('AuthService@authenticateWithApple error: ' . $th->getMessage());
+            return ServiceReturn::error('Có lỗi xảy ra khi xác thực Apple');
         }
     }
 
@@ -807,6 +913,76 @@ class AuthService extends BaseService
                 $th
             );
             return ServiceReturn::error('Có lỗi xảy ra. Vui lòng thử lại sau');
+        }
+    }
+
+    /**
+     * Chỉnh sửa avatar người dùng.
+     * @param  $file
+     * @return ServiceReturn
+     */
+    public function editInfoAvatar($file): ServiceReturn
+    {
+        try {
+            $user = $this->userModel->find(Auth::id());
+            if (!$user) {
+                return ServiceReturn::error(message: 'Người dùng không tồn tại');
+            }
+            if (!$file instanceof UploadedFile) {
+                return ServiceReturn::error(message: 'Hình ảnh avatar không hợp lệ');
+            }
+            $avatarPathNew = $file->store(DirectFile::makePathById(
+                type: DirectFile::AVATARS,
+                id: $user->id
+            ), 'public');
+            if (!$avatarPathNew) {
+                return ServiceReturn::error(message: 'Lỗi khi lưu hình ảnh avatar');
+            }
+            // Xóa avatar cũ nếu có
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            // Cập nhật avatar_path trong bảng users
+            $user->avatar = $avatarPathNew;
+            $user->save();
+            return ServiceReturn::success(
+                data: $user
+            );
+        } catch (\Throwable $exception) {
+            LogHelper::error(
+                message: "Lỗi AuthService@editInfoAvatar",
+                ex: $exception
+            );
+            return ServiceReturn::error(message: $exception->getMessage());
+        }
+    }
+
+    /**
+     * Xóa avatar người dùng.
+     * @return ServiceReturn
+     */
+    public function deleteAvatar(): ServiceReturn
+    {
+        try {
+            $user = $this->userModel->find(Auth::id());
+            if (!$user) {
+                return ServiceReturn::error(message: 'Người dùng không tồn tại');
+            }
+            // Xóa avatar cũ nếu có
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = null;
+            $user->save();
+            return ServiceReturn::success(
+                data: $user
+            );
+        } catch (\Throwable  $exception) {
+            LogHelper::error(
+                message: "Lỗi AuthService@deleteAvatar",
+                ex: $exception
+            );
+            return ServiceReturn::error(message: 'Có lỗi xảy ra. Vui lòng thử lại sau');
         }
     }
 }
