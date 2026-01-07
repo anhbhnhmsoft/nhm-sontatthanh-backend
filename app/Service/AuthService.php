@@ -12,6 +12,7 @@ use App\Enums\DirectFile;
 use App\Enums\UserNotificationType;
 use App\Enums\UserRole;
 use App\Http\DTO\NotificationPayload;
+use App\Http\Resources\UserResource;
 use App\Jobs\SendNotificationJob;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -81,14 +82,14 @@ class AuthService extends BaseService
                 key: CacheKey::CACHE_ZALO_AUTH_TOKEN,
                 value: [
                     'token' => $tokenAuth,
-                    'user' => $user,
+                    'user' => UserResource::make($user),
                 ],
                 uniqueKey: $ip . $token,
                 expire: 60 * 5,
             );
             return ServiceReturn::success([
-                'user' => $user,
-                'token' => $token
+                'user' => UserResource::make($user),
+                'token' => $tokenAuth,
             ], 'Xác thực Zalo thành công');
         } catch (\Throwable $th) {
             LogHelper::error('AuthService@authenticateWithZalo error: ' . $th->getMessage());
