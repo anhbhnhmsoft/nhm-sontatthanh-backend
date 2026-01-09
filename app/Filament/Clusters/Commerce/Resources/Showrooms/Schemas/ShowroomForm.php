@@ -104,34 +104,14 @@ class ShowroomForm
                             ->numeric()
                             ->visible(false)
                             ->required(),
-
-                        Repeater::make('hotlines')
-                            ->label('Số điện thoại hotline')
-                            ->schema([
-                                Grid::make()
-                                    ->schema([
-                                        TextInput::make('label')
-                                            ->label('Tên hotline')
-                                            ->required()
-                                            ->maxLength(255)
-                                            ->validationMessages([
-                                                'required' => 'Vui lòng nhập tên hotline',
-                                                'max' => 'Tên hotline không được vượt quá 255 ký tự',
-                                            ]),
-                                        TextInput::make('phone')
-                                            ->label('Số điện thoại')
-                                            ->required()
-                                            ->maxLength(255)
-                                            ->tel()
-                                            ->validationMessages([
-                                                'max' => 'Số điện thoại không được vượt quá 255 ký tự',
-                                                'regex' => 'Số điện thoại không hợp lệ',
-                                            ]),
-                                    ])
-                            ])
-                            ->minItems(1)
-                            ->required(),
-
+                        Select::make('department_code')
+                            ->label('Phòng ban')
+                            ->relationship(
+                                name: 'departments',
+                                titleAttribute: 'name',
+                            )
+                            ->preload()
+                            ->multiple(),
                     ]),
             ]);
     }

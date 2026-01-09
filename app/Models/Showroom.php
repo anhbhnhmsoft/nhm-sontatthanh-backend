@@ -22,11 +22,9 @@ class Showroom extends Model
         'weblink',
         'latitude',
         'longitude',
-        'hotlines',
     ];
 
     protected $casts = [
-        'hotlines' => 'array',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
     ];
@@ -50,4 +48,9 @@ class Showroom extends Model
     {
         return $this->hasMany(Camera::class);
     }
+
+        public function departments()
+        {
+            return $this->hasMany(Department::class);
+        }
 }

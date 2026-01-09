@@ -5,9 +5,8 @@ namespace App\Http\Resources;
 use App\Core\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
-class ShowroomResource extends JsonResource
+class DepartmentResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,14 +15,15 @@ class ShowroomResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-
         return [
             'id' => (string) $this->id,
             'name' => $this->name,
-            'address' => $this->address,
-            'email' => $this->email,
-            'logo' => Storage::disk('public')->url($this->logo) ?? null,
-            'departments' => DepartmentResource::collection($this->departments),
+            'hotlines' => array_map(fn($hotline) => [
+                'id' => (string) Helper::getTimestampAsId(),
+                'name_user' => $hotline['name_user'] ?? '',
+                'name' => $hotline['label'] ?? '',
+                'phone' => $hotline['phone'] ?? '',
+            ], (array) $this->hotlines) ?? [],
         ];
     }
 }
