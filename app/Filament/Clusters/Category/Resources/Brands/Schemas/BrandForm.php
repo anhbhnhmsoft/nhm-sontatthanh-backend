@@ -47,6 +47,12 @@ class BrandForm
                             ->validationMessages([
                                 'required' => 'Vui lòng chọn trạng thái',
                             ]),
+                        TextInput::make('source')
+                            ->label('Nguồn')
+                            ->maxLength(255)
+                            ->validationMessages([
+                                'max_length' => 'Nguồn không được vượt quá 255 ký tự',
+                            ]),
                         Textarea::make('description')
                             ->label('Mô tả')
                             ->maxLength(255)

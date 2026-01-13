@@ -53,5 +53,10 @@ class BrandObserve
     private function refreshCache(Brand $brand): void
     {
         Caching::deleteCache(CacheKey::CACHE_BRAND);
+
+        $products = $brand->products()->get();
+        foreach ($products as $product) {
+            Caching::deleteCache(CacheKey::CACHE_PRODUCT, "detail_{$product->id}");
+        }
     }
 }
