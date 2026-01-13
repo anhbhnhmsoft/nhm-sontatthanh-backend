@@ -38,25 +38,30 @@ class NotificationService extends BaseService
     public function deviceToken(string $expoPushToken, ?string $deviceId, ?string $deviceType): ServiceReturn
     {
         try {
-
             $user = Auth::user();
-            if (!$user) {
-                return ServiceReturn::error('Không tìm thấy người dùng');
-            }
+            if (!$user) return ServiceReturn::error('Không tìm thấy người dùng');
 
             $this->userDeviceModel->where('expo_push_token', $expoPushToken)
                 ->where('user_id', '!=', $user->id)
                 ->delete();
-            $userDevice = $this->userDeviceModel->updateOrCreate(
+
+            $this->userDeviceModel->upsert(
                 [
                     'user_id' => $user->id,
                     'device_id' => $deviceId,
-                ],
-                [
                     'expo_push_token' => $expoPushToken,
                     'device_type' => $deviceType,
-                ]
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ],
+                ['user_id', 'device_id'],
+                ['expo_push_token', 'device_type', 'updated_at']
             );
+
+            $userDevice = $this->userDeviceModel
+                ->where('user_id', $user->id)
+                ->where('device_id', $deviceId)
+                ->first();
 
             return ServiceReturn::success($userDevice);
         } catch (\Exception $th) {

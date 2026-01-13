@@ -140,7 +140,6 @@ class ZaloAuthController extends BaseController
      */
     public function keepZaloAuthToken(Request $request): JsonResponse
     {
-        LogHelper::error('Zalo Auth Token Keep Zalo',null,$request->all());
         $request->validate([
             'token' => 'required|string',
             'deeplink' => 'required|string',

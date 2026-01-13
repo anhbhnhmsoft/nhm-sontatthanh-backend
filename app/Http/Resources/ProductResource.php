@@ -23,6 +23,8 @@ class ProductResource extends JsonResource
                 return [
                     'id' => (string) $this->brand->id,
                     'name' => $this->brand->name,
+                    'logo' => $this->brand->logo ? Storage::disk('public')->url($this->brand->logo) : null,
+                    'source' => $this->brand->source ?? null,
                 ];
             }),
             'line' => $this->whenLoaded('line', function () {

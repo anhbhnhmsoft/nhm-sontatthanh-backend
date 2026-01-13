@@ -21,6 +21,7 @@ class BrandResource extends JsonResource
             'logo' => Storage::disk('public')->url($this->logo) ?? null,
             'description' => $this->description,
             'is_active' => $this->is_active,
+            'source' => $this->source ?? null,
         ];
     }
 }

@@ -1,9 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
-use App\Core\Cache\CacheKey;
-use App\Core\Cache\Caching;
 use App\Core\Controller\BaseController;
 use App\Core\LogHelper;
 use App\Http\Requests\Auth\EditProfileRequest;

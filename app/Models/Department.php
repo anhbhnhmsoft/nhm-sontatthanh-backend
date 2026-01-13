@@ -12,10 +12,20 @@ class Department extends Model
 
     protected $fillable = [
         'name',
+        'hotlines',
+    ];
+
+    protected $casts = [
+        'hotlines' => 'array',
     ];
 
     public function users()
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(User::class, 'department_id');
+    }
+
+    public function showroom()
+    {
+        return $this->belongsTo(Showroom::class);
     }
 }

@@ -47,9 +47,13 @@ class LineObserve
     {
         $this->refreshCache($line);
     }
-    
+
     private function refreshCache(Line $line): void
     {
         Caching::deleteCache(CacheKey::CACHE_LINE);
+        $products = $line->products()->get();
+        foreach ($products as $product) {
+            Caching::deleteCache(CacheKey::CACHE_PRODUCT, "detail_{$product->id}");
+        }
     }
 }

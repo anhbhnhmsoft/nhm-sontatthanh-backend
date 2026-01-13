@@ -15,6 +15,7 @@ class Brand extends Model
         'logo',
         'description',
         'is_active',
+        'source'
     ];
 
     protected $casts = [
