@@ -16,4 +16,15 @@ enum ConfigKey: string
     case APPLE_KEY_ID = 'APPLE_KEY_ID';
     case APPLE_PRIVATE_KEY = 'APPLE_PRIVATE_KEY';
     case APPLE_REDIRECT_URI = 'APPLE_REDIRECT_URI';
+    case APP_AVATAR = 'APP_AVATAR';
+
+    public static function getConfigDirector(): array
+    {
+        return [
+            self::APP_AVATAR,
+            self::APP_REMINDER,
+            self::APP_REMINDER_NAME,
+            self::APP_REMINDER_POSITION,
+        ];
+    }
 }

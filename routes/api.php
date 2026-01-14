@@ -79,3 +79,4 @@ Route::prefix('notification')->middleware(['auth:sanctum'])->group(function () {
 Route::get('hotlines', [ShowroomController::class, 'hotlines']);
 Route::get('config/{slug}', [ShowroomController::class, 'config']);
 Route::post('get-error', [AuthController::class, 'getError']);
+Route::get('config-director', [ShowroomController::class, 'configDirector']);

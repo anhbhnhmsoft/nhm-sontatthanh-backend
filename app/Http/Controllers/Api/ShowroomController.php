@@ -12,6 +12,7 @@ use App\Service\ConfigService;
 use App\Service\ShowroomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ShowroomController extends BaseController
 {
@@ -144,5 +145,27 @@ class ShowroomController extends BaseController
         }
         $data = $result->getData();
         return $this->sendSuccess(data: $data);
+    }
+
+    public function configDirector() : JsonResponse
+    {
+        $list = ConfigKey::getConfigDirector();
+        $data = [];
+        foreach($list as $slug){
+            $result = $this->configService->getConfigByKey($slug);
+            if( $result->isError() ){
+                return $this->sendError($result->getMessage());
+            }
+            $data[$slug->value] = $result->getData();
+        }
+        $res = [];
+        foreach ($data as $key => $value){
+            if($key === ConfigKey::APP_AVATAR->value){
+                $res[$key] = Storage::disk('public')->url($value['config_value']);
+                continue;
+            }
+            $res[$key] = $value['config_value'];
+        }
+        return $this->sendSuccess(data: $res);
     }
 }

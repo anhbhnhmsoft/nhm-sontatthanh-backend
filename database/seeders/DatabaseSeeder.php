@@ -25,9 +25,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Run additional seed routines (skip in production)
-        $this->seedProvince();
-        $this->seedAdmin();
-        // $this->seedConfig();
+//        $this->seedProvince();
+//        $this->seedAdmin();
+         $this->seedConfig();
     }
 
     private function seedProvince()
@@ -170,35 +170,41 @@ class DatabaseSeeder extends Seeder
 //                    'config_type' => ConfigType::TEXT->value,
 //                    'description' => 'Vị trí người giữ lời nhắc',
 //                ],
+//                [
+//                    'config_key' => ConfigKey::APPLE_CLIENT_ID->value,
+//                    'config_value' => '',
+//                    'config_type' => ConfigType::TEXT->value,
+//                    'description' => 'Client ID App',
+//                ],
+//                [
+//                    'config_key' => ConfigKey::APPLE_TEAM_ID->value,
+//                    'config_value' => '',
+//                    'config_type' => ConfigType::TEXT->value,
+//                    'description' => 'Team ID App',
+//                ],
+//                [
+//                    'config_key' => ConfigKey::APPLE_KEY_ID->value,
+//                    'config_value' => '',
+//                    'config_type' => ConfigType::TEXT->value,
+//                    'description' => 'Key ID App',
+//                ],
+//                [
+//                    'config_key' => ConfigKey::APPLE_PRIVATE_KEY->value,
+//                    'config_value' => '',
+//                    'config_type' => ConfigType::TEXT->value,
+//                    'description' => 'Private Key App',
+//                ],
+//                [
+//                    'config_key' => ConfigKey::APPLE_REDIRECT_URI->value,
+//                    'config_value' => '',
+//                    'config_type' => ConfigType::TEXT->value,
+//                    'description' => 'Redirect URI App',
+//                ],
                 [
-                    'config_key' => ConfigKey::APPLE_CLIENT_ID->value,
+                    'config_key' => ConfigKey::APP_AVATAR->value,
                     'config_value' => '',
                     'config_type' => ConfigType::TEXT->value,
-                    'description' => 'Client ID App',
-                ],
-                [
-                    'config_key' => ConfigKey::APPLE_TEAM_ID->value,
-                    'config_value' => '',
-                    'config_type' => ConfigType::TEXT->value,
-                    'description' => 'Team ID App',
-                ],
-                [
-                    'config_key' => ConfigKey::APPLE_KEY_ID->value,
-                    'config_value' => '',
-                    'config_type' => ConfigType::TEXT->value,
-                    'description' => 'Key ID App',
-                ],
-                [
-                    'config_key' => ConfigKey::APPLE_PRIVATE_KEY->value,
-                    'config_value' => '',
-                    'config_type' => ConfigType::TEXT->value,
-                    'description' => 'Private Key App',
-                ],
-                [
-                    'config_key' => ConfigKey::APPLE_REDIRECT_URI->value,
-                    'config_value' => '',
-                    'config_type' => ConfigType::TEXT->value,
-                    'description' => 'Redirect URI App',
+                    'description' => 'Avatar App',
                 ],
             ];
             foreach ($configs as $config) {
