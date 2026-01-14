@@ -3,63 +3,89 @@
 namespace App\Filament\Pages;
 
 use App\Service\ConfigService;
+use App\Enums\ConfigKey;
 use BackedEnum;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 
-class Setting extends Page
+class Setting extends Page implements HasForms
 {
+    use InteractsWithForms;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Squares2x2;
     protected string $view = 'filament.pages.setting';
-    protected static int|null $navigationSort = 9999;
-    protected static ?string $title = 'Cài đặt';
+    protected static ?string $title = 'Cài đặt hệ thống';
 
-    public array $configList = [];
-    public array $configValues = [];
-    protected ConfigService $service;
+    // Khai báo data cho form
+    public ?array $data = [];
 
-    public function boot(): void
+    public function mount(ConfigService $service): void
     {
-        $this->service = app(ConfigService::class);
+        $result = $service->getAllConfig();
+
+        if ($result->isSuccess()) {
+            // Đổ dữ liệu từ DB vào form
+            $this->form->fill(
+                $result->getData()->pluck('config_value', 'config_key')->toArray()
+            );
+        }
     }
 
-
-    public function mount(): void
+    public function form(Schema $form): Schema
     {
-        $result = $this->service->getAllConfig();
+        $service = app(ConfigService::class);
+        $result = $service->getAllConfig();
+        $fields = [];
+
+        if ($result->isSuccess()) {
+            $configs = $result->getData();
+            foreach ($configs as $config) {
+                $key = $config->config_key;
+                $label = str_replace('_', ' ', $key);
+                $label = ucwords(strtolower($label));
+
+                if ($key === ConfigKey::APP_AVATAR->value) {
+                    $fields[] = FileUpload::make($key)
+                        ->label('Hình ảnh giám đốc')
+                        ->disk('public')
+                        ->image()
+                        ->required()
+                        ->directory('configs');
+                    continue;
+                }
+
+                $fields[] = TextInput::make($key)
+                    ->label($label);
+            }
+        }
+
+        return $form
+            ->schema([
+                Section::make('Cấu hình chung')
+                    ->description('Quản lý các thông số vận hành hệ thống')
+                    ->schema($fields)
+                    ->columns(2),
+            ])
+            ->statePath('data');
+    }
+
+    public function save(ConfigService $service): void
+    {
+        $formData = $this->form->getState();
+        $result = $service->updateConfigValues($formData);
 
         if ($result->isError()) {
-            Notification::make()
-                ->title('Lỗi')
-                ->body($result->getMessage())
-                ->warning()
-                ->send();
+            Notification::make()->title('Lỗi')->danger()->body($result->getMessage())->send();
             return;
         }
 
-        $configs = $result->getData();
-        $this->configList = $configs->toArray();
-        $this->configValues = $configs->pluck('config_value', 'config_key')->toArray();
-    }
-
-    public function updateConfig()
-    {
-        $result = $this->service->updateConfigValues($this->configValues);
-
-        if ($result->isError()) {
-            Notification::make()
-                ->title('Lưu cấu hình thất bại')
-                ->body($result->getMessage())
-                ->danger()
-                ->send();
-            return;
-        }
-
-        Notification::make()
-            ->title('Đã lưu cấu hình')
-            ->body('Các thiết lập hệ thống đã được cập nhật thành công.')
-            ->success()
-            ->send();
+        Notification::make()->title('Thành công')->success()->send();
     }
 }
