@@ -33,9 +33,8 @@ class NewsTable
                     ->label('Mô tả')
                     ->limit(50)
                     ->searchable(),
-                TextColumn::make('type')
-                    ->label('Loại tin tức')
-                    ->formatStateUsing(fn($state) => NewsType::getLabel($state))
+                TextColumn::make('category.name')
+                    ->label('Danh mục')
                     ->searchable(),
                 TextColumn::make('source')
                     ->label('Nguồn')

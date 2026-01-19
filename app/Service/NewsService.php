@@ -6,6 +6,7 @@ use App\Core\Controller\FilterDTO;
 use App\Core\LogHelper;
 use App\Core\Service\BaseService;
 use App\Core\Service\ServiceReturn;
+use App\Models\CategoryNews;
 use App\Models\News;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -13,12 +14,13 @@ class NewsService extends BaseService
 {
 
     public function __construct(
-        protected News $news
+        protected News $news,
+        protected CategoryNews $categoryNews,
     ) {}
 
     /**
      * Get paginated list of news with filters
-     * 
+     *
      * @param FilterDTO $filterOptions
      * @return ServiceReturn
      */
@@ -27,6 +29,9 @@ class NewsService extends BaseService
         try {
             $query = $this->news->query();
             $filters = $filterOptions->filters;
+
+            // Eager load relationships
+            $query->with(['category']);
 
             if (!empty($filters)) {
                 // Search by keyword
@@ -41,6 +46,11 @@ class NewsService extends BaseService
                 // Filter by ID
                 if (isset($filters['id']) && $filters['id'] != null) {
                     $query->where('id', $filters['id']);
+                }
+
+                // Filter by category
+                if (isset($filters['category_id']) && $filters['category_id'] != null) {
+                    $query->where('category_id', $filters['category_id']);
                 }
 
                 // Filter by type
@@ -97,14 +107,14 @@ class NewsService extends BaseService
 
     /**
      * Get news detail by ID and increment view count
-     * 
+     *
      * @param int $newsId
      * @return ServiceReturn
      */
     public function getNewsDetail(int $newsId): ServiceReturn
     {
         try {
-            $news = $this->news->find($newsId);
+            $news = $this->news->with('category')->find($newsId);
 
             if (!$news) {
                 return ServiceReturn::error(
@@ -125,6 +135,24 @@ class NewsService extends BaseService
             );
             return ServiceReturn::error(
                 message: "Có lỗi xảy ra khi lấy thông tin tin tức"
+            );
+        }
+    }
+
+    public function getNewsCategories(): ServiceReturn
+    {
+        try {
+            $categories = $this->categoryNews->all();
+            return ServiceReturn::success(
+                data: $categories
+            );
+        } catch (\Exception $exception) {
+            LogHelper::error(
+                message: "Lỗi NewsService@getNewsCategories",
+                ex: $exception
+            );
+            return ServiceReturn::error(
+                message: "Có lỗi xảy ra khi lấy danh mục tin tức"
             );
         }
     }

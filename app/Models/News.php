@@ -12,6 +12,7 @@ class News extends Model
 
     protected $fillable = [
         'title',
+        'category_id',
         'description',
         'content',
         'image',
@@ -26,4 +27,9 @@ class News extends Model
         'published_at' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(CategoryNews::class, 'category_id');
+    }
 }

@@ -53,14 +53,14 @@ class AppleService extends BaseService
                 return null;
             }
 
-            $clientIdConfig = $this->configService->getConfigByKey(ConfigKey::APPLE_CLIENT_ID);
-            if (!$clientIdConfig->isError()) {
-                $expectedAud = $clientIdConfig->getData()['config_value'];
-                if ($payload->aud !== $expectedAud) {
-                    LogHelper::error('Apple Token invalid Audience. Expected: ' . $expectedAud . ', Got: ' . $payload->aud);
-                    return null;
-                }
-            }
+//            $clientIdConfig = $this->configService->getConfigByKey(ConfigKey::APPLE_CLIENT_ID);
+//            if (!$clientIdConfig->isError()) {
+//                $expectedAud = $clientIdConfig->getData()['config_value'];
+//                if ($payload->aud !== $expectedAud) {
+//                    LogHelper::error('Apple Token invalid Audience. Expected: ' . $expectedAud . ', Got: ' . $payload->aud);
+//                    return null;
+//                }
+//            }
 
             return (array) $payload;
         } catch (\Throwable $e) {
