@@ -134,5 +134,7 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+    'download_link_android' => env('DOWNLOAD_PATH_ANDROID', 'https://example.com/download'),
+    'download_link_ios' => env('DOWNLOAD_PATH_IOS', 'https://example.com/download'),
 
 ];

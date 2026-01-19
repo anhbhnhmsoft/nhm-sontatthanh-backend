@@ -30,6 +30,7 @@ Route::prefix('auth')->group(function () {
         Route::post('edit-profile', [AuthController::class, 'editProfile']);
         Route::post('edit-avatar', [AuthController::class, 'editAvatar']);
         Route::delete('delete-avatar', [AuthController::class, 'deleteAvatar']);
+        Route::delete('delete-account', [AuthController::class, 'deleteAccount']);
     });
 });
 

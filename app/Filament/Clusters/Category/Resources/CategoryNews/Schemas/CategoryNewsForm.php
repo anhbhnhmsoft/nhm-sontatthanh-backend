@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Category\Resources\CategoryNews\Schemas;
 
+use Filament\Resources\Pages\EditRecord;
 use Filament\Schemas\Schema;
 
 class CategoryNewsForm
@@ -22,7 +23,8 @@ class CategoryNewsForm
                                 'required' => 'Vui lòng nhập tên danh mục',
                                 'max_length' => 'Tên danh mục không được vượt quá 255 ký tự',
                                 'unique' => 'Tên danh mục đã tồn tại',
-                            ]),
+                            ])
+                            ->disabled(fn($state, $livewire) => $state == 'Nổi bật' && $livewire instanceof EditRecord),
                         \Filament\Forms\Components\Textarea::make('description')
                             ->label('Mô tả')
                             ->maxLength(255)

@@ -986,4 +986,31 @@ class AuthService extends BaseService
             return ServiceReturn::error(message: 'Có lỗi xảy ra. Vui lòng thử lại sau');
         }
     }
+
+    public function deleteAccount()
+    {
+        try {
+            $user = $this->userModel->find(Auth::id());
+            if (!$user) {
+                return ServiceReturn::error(message: 'Người dùng không tồn tại');
+            }
+            // Xóa avatar cũ nếu có
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $user->is_active = false;
+            $user->save();
+            Auth::user()->tokens()->delete();
+            // Auth::logout();
+            return ServiceReturn::success(
+                message: 'Xóa tài khoản thành công'
+            );
+        } catch (\Throwable  $exception) {
+            LogHelper::error(
+                message: "Lỗi AuthService@deleteAccount",
+                ex: $exception
+            );
+            return ServiceReturn::error(message: 'Có lỗi xảy ra. Vui lòng thử lại sau');
+        }
+    }
 }

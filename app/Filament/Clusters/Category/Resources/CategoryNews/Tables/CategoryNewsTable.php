@@ -33,8 +33,10 @@ class CategoryNewsTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
-                \Filament\Actions\DeleteAction::make(),
+                EditAction::make()
+                    ->hidden(fn($record) => $record->name == 'Nổi bật'),
+                \Filament\Actions\DeleteAction::make()
+                    ->hidden(fn($record) => $record->name == 'Nổi bật'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
