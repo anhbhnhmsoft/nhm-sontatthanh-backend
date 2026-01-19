@@ -396,4 +396,17 @@ class AuthController extends BaseController
             message: 'Lỗi không xác định',
         );
     }
+
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $result = $this->authService->deleteAccount();
+        if ($result->isError()) {
+            return $this->sendError(
+                message: $result->getMessage(),
+            );
+        }
+        return $this->sendSuccess(
+            message: $result->getMessage(),
+        );
+    }
 }
