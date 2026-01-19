@@ -47,6 +47,9 @@ class ProductResource extends JsonResource
             }, $this->images),
             'is_active' => $this->is_active,
             'in_stock' => $this->quantity > 0,
+            'is_wishlist' => auth('sanctum')->check()
+                ? $this->wishlists->where('user_id', auth('sanctum')->id())->isNotEmpty()
+                : false,
         ];
     }
 }

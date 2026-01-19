@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Camera;
+use App\Models\CategoryNews;
 use App\Models\Line;
 use App\Models\Product;
 use App\Models\Showroom;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Observers\BannerObserve;
 use App\Observers\BrandObserve;
 use App\Observers\CameraObserve;
+use App\Observers\CategoryNewsObserver;
 use App\Observers\LineObserve;
 use App\Observers\ProductObserve;
 use App\Observers\ShowroomObserve;
@@ -73,5 +75,6 @@ class AppServiceProvider extends ServiceProvider
         Showroom::observe(ShowroomObserve::class);
         Camera::observe(CameraObserve::class);
         Brand::observe(BrandObserve::class);
+        CategoryNews::observe(CategoryNewsObserver::class);
     }
 }

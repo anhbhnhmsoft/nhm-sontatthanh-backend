@@ -38,6 +38,7 @@ class ProductListRequest extends ListRequest
         'is_active',
         'min_price',
         'max_price',
-        'in_stock'
+        'in_stock',
+        'is_wishlist',
     ];
 }

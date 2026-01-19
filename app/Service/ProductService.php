@@ -70,8 +70,14 @@ class ProductService extends BaseService
                 }
 
                 // Filter by availability (quantity > 0)
-                if (isset($filters['in_stock']) && $filters['in_stock'] == true) {
+                if (isset($filters['in_stock']) && boolval($filters['in_stock'])) {
                     $query->where('quantity', '>', 0);
+                }
+                // Filter by wishlist
+                if( isset($filters['is_wishlist']) && boolval($filters['is_wishlist']) ){
+                    $query->whereHas('wishlists', function ($query) use ($filters) {
+                        $query->where('user_id', auth()->user()->id);
+                    });
                 }
             }
             // Apply sorting

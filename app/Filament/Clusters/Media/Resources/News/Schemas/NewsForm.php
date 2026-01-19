@@ -47,12 +47,12 @@ class NewsForm
                                     ->validationMessages([
                                         'max' => 'Mô tả không được vượt quá 255 ký tự',
                                     ]),
-                                Select::make('type')
-                                    ->label('Loại tin tức')
+                                Select::make('category_id')
+                                    ->label('Danh mục')
                                     ->required()
-                                    ->options(NewsType::toOptions())
+                                    ->relationship('category', 'name')
                                     ->validationMessages([
-                                        'required' => 'Loại tin tức là bắt buộc',
+                                        'required' => 'Danh mục là bắt buộc',
                                     ]),
                                 TextInput::make("source")
                                     ->label('Nguồn')

@@ -22,6 +22,12 @@ class NewsResource extends JsonResource
             'content' => $this->content,
             'image' => Storage::disk('public')->url($this->image) ?? null,
             'type' => $this->type,
+            'category' => $this->whenLoaded('category', function () {
+                return [
+                    'id' => (string) $this->category->id,
+                    'name' => $this->category->name,
+                ];
+            }),
             'source' => $this->source,
             'published_at' => $this->published_at?->toIso8601String(),
             'is_active' => $this->is_active,
