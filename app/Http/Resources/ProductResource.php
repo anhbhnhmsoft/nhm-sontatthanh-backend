@@ -42,14 +42,15 @@ class ProductResource extends JsonResource
             'sell_price' => $this->sell_price,
             'price_discount' => $this->price_discount,
             'discount_percent' => $this->discount_percent,
-            'images' => array_map(function ($image) {
+            'images' => isset($this->images) && is_array($this->images) ? array_map(function ($image) {
                 return Storage::disk('public')->url($image);
-            }, $this->images),
+            }, $this->images) : [],
             'is_active' => $this->is_active,
             'in_stock' => $this->quantity > 0,
             'is_wishlist' => auth('sanctum')->check()
                 ? $this->wishlists->where('user_id', auth('sanctum')->id())->isNotEmpty()
                 : false,
+            'is_incart' => $this->is_incart ?? false,
         ];
     }
 }

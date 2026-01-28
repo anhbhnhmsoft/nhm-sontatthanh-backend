@@ -17,10 +17,15 @@ class Channel extends Model
         'status',
         'name',
         'position',
+        'is_activated',
+        'has_stream',
+        'live_token',
+        'live_url_hls',
+        'live_url_https',
     ];
 
     public function camera()
     {
         return $this->belongsTo(Camera::class);
-    }   
+    }
 }

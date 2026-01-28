@@ -110,10 +110,6 @@ class CamerasTable
                             }
 
                             $channelRes = $videoLiveService->getDeviceChannelInfo($record->device_id);
-                            LogHelper::debug('Kiểm tra kết nối camera', [
-                                'channel_id' => $channelRes->getData(),
-                            ]);
-                            $res = $videoLiveService->startLive($record->device_id);
 
                             if ($channelRes->isError()) {
                                 Notification::make()
@@ -123,6 +119,19 @@ class CamerasTable
                                     ->send();
                                 return;
                             }
+
+                            // Try to start live for the first channel found
+                            $channels = $record->channels()->orderBy('position')->get();
+                            $firstChannel = $channels->first();
+                            $channelNo = $firstChannel ? $firstChannel->position : 0; // Default to 0 if no channels
+
+                            LogHelper::debug('Kiểm tra kết nối camera', [
+                                'device_id' => $record->device_id,
+                                'channel_no' => $channelNo,
+                            ]);
+
+                            $res = $videoLiveService->startLive($record->device_id, $channelNo);
+
                             if ($res->isError()) {
                                 Notification::make()
                                     ->title('Cảnh báo')
@@ -144,33 +153,44 @@ class CamerasTable
                         ->color('success')
                         ->mountUsing(function (Action $action, $record) {
                             $videoLiveService = app(VideoLiveService::class);
-                            $res = $videoLiveService->viewLive($record->device_id);
+                            $channels = $record->channels()->orderBy('position')->get();
+                            $streams = [];
 
-                            if ($res->isError()) {
-                                Notification::make()
-                                    ->title('Lỗi kết nối')
-                                    ->body($res->getMessage())
-                                    ->danger()
-                                    ->send();
-
-                                $action->halt();
+                            foreach ($channels as $channel) {
+                                $res = $videoLiveService->viewLive($record->device_id, $channel->position);
+                                if ($res->isSuccess()) {
+                                    $url = $res->getData()['hls'];
+                                    $proxyUrl = str_replace(
+                                        'http://cmgw-sg.easy4ipcloud.com:8888/',
+                                        'https://sontatthanh.vn/camera-proxy/',
+                                        $url
+                                    );
+                                    $streams[] = [
+                                        'name' => $channel->name ?? "Channel {$channel->position}",
+                                        'url' => $proxyUrl,
+                                        'position' => $channel->position,
+                                    ];
+                                }
                             }
-                            $url = $res->getData()['hls'];
 
-                            $proxyUrl = str_replace(
-                                'http://cmgw-sg.easy4ipcloud.com:8888/',
-                                'https://sontatthanh.vn/camera-proxy/',
-                                $url
-                            );
+                            if (empty($streams)) {
+                                Notification::make()
+                                    ->title('Không tìm thấy luồng phát')
+                                    ->body('Không có kênh nào đang hoạt động hoặc có tín hiệu.')
+                                    ->warning()
+                                    ->send();
+                                // Optional: Don't halt, let them see empty modal or halt?
+                                // $action->halt();
+                            }
 
                             $action->arguments([
-                                'hls_url' => $proxyUrl,
+                                'streams' => $streams,
                             ]);
                         })
                         ->modalContent(fn(array $arguments) => view('filament.pages.video-player', [
-                            'url' => $arguments['hls_url'] ?? null,
+                            'streams' => $arguments['streams'] ?? [],
                         ]))
-                        ->modalWidth('4xl')
+                        ->modalWidth('7xl') // Increase width for multiple streams
                         ->modalHeading(fn($record) => "Live Stream: {$record->name}")
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Đóng'),

@@ -17,7 +17,7 @@ class ProductController extends BaseController
         protected ProductService $productService
     ) {}
 
-    /**
+    /**=prefix('product')->group(fu
      * Get paginated list of products
      * NOTE: No caching because product data is dynamic with filters
      *

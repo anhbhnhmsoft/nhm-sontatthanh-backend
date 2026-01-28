@@ -321,24 +321,50 @@ class VideoLiveService
 
                 if (!empty($devices)) {
                     $deviceInfo = $devices[0];
-                    $channels = $deviceInfo['channels'] ?? [];
+                    $apiChannels = $deviceInfo['channels'] ?? [];
 
-                    // Update camera info
+                    // Update camera status
                     $camera->update([
                         'enable' => $deviceInfo['status'] == 'online',
-                        'channel_id' => count($channels),
+                        // Don't update channel_id (count) from API if we want to manage it manually or separately
                     ]);
 
-                    // Recreate channels
-                    $camera->channels()->delete();
-                    foreach ($channels as $channel) {
-                        $camera->channels()->create([
-                            'name' => $channel['name'] ?? '',
-                            'status' => $channel['status'] == 'online'
-                                ? StatusChannel::ONLINE->value
-                                : StatusChannel::OFFLINE->value,
-                            'position' => $channel['channelId'],
-                        ]);
+                    // Get existing channels to map
+                    $existingChannels = $camera->channels()->get()->keyBy('position');
+
+                    // Track processed positions
+                    $processedPositions = [];
+
+                    foreach ($apiChannels as $apiChannel) {
+                        $position = $apiChannel['channelId'];
+                        $processedPositions[] = $position;
+
+                        $channelData = [
+                            'name' => $apiChannel['name'] ?? "Channel $position",
+                            'status' => $apiChannel['status'] == 'online' ? StatusChannel::ONLINE->value : StatusChannel::OFFLINE->value,
+                            'is_activated' => true, // Available in API => activated
+                            'has_stream' => $apiChannel['status'] == 'online', // Simple assumption, can be refined
+                        ];
+
+                        if ($existingChannels->has($position)) {
+                            $existingChannels[$position]->update($channelData);
+                        } else {
+                            $camera->channels()->create(array_merge($channelData, ['position' => $position]));
+                        }
+                    }
+
+                    // Optional: Mark others as inactive? 
+                    // Requirement: "Channel không xuất hiện => is_activated=false"
+                    // So we should loop through existing channels that were NOT in api response
+                    foreach ($existingChannels as $position => $channel) {
+                        if (!in_array($position, $processedPositions)) {
+                            $channel->update([
+                                'is_activated' => false,
+                                'has_stream' => false,
+                                // Keep status as is or set to OFFLINE?
+                                'status' => StatusChannel::OFFLINE->value,
+                            ]);
+                        }
                     }
                 }
 
@@ -366,14 +392,22 @@ class VideoLiveService
      * @param string $deviceId
      * @return ServiceReturn
      */
-    public function startLive(string $deviceId): ServiceReturn
+    public function startLive(string $deviceId, ?int $channelNo = null): ServiceReturn
     {
+        // Cache key logic - include channelNo if present to avoid collision? 
+        // For now, let's append channelNo if provided, or default to 0 if we assume single stream main?
+        // Actually, if we want to support multiple channels, we should probably differentiate. 
+        // But user didn't ask to change viewLive, only explicitly start-live. 
+        // Let's rely on finding channel first.
+
+        $cacheKey = $deviceId . ($channelNo !== null ? "_{$channelNo}" : "");
+
         // Kiểm tra cache trước
-        if (Caching::hasCache(CacheKey::CACHE_LIVE_STREAM, $deviceId)) {
+        if (Caching::hasCache(CacheKey::CACHE_LIVE_STREAM, $cacheKey)) {
             return ServiceReturn::success([
                 'success' => true,
                 'message' => 'Live stream đang hoạt động',
-                'data' => Caching::getCache(CacheKey::CACHE_LIVE_STREAM, $deviceId)
+                'data' => Caching::getCache(CacheKey::CACHE_LIVE_STREAM, $cacheKey)
             ]);
         }
 
@@ -382,9 +416,16 @@ class VideoLiveService
             return ServiceReturn::error('Thiết bị không tồn tại');
         }
 
-        $channel = $device->channels()->where('status', StatusChannel::ONLINE->value)->first();
-        if (!$channel) {
-            return ServiceReturn::error('Không có kênh nào đang hoạt động');
+        if ($channelNo !== null) {
+            $channel = $device->channels()->where('position', $channelNo)->first();
+            if (!$channel) {
+                return ServiceReturn::error("Kênh số {$channelNo} không tồn tại");
+            }
+        } else {
+            $channel = $device->channels()->where('status', StatusChannel::ONLINE->value)->first();
+            if (!$channel) {
+                return ServiceReturn::error('Không có kênh nào đang hoạt động');
+            }
         }
 
         $response = $this->sendAuthRequest(self::PATH_START_LIVE, [
@@ -399,7 +440,7 @@ class VideoLiveService
         // Live stream đã được kích hoạt trước đó
         if ($code == 'LV1001') {
             $device->update(['is_active' => true]);
-            return $this->viewLive($deviceId);
+            return $this->viewLive($deviceId, $channelNo);
         }
 
         // Khởi động thành công
@@ -421,7 +462,17 @@ class VideoLiveService
                 'description' => $device->description,
             ];
 
-            Caching::setCache(CacheKey::CACHE_LIVE_STREAM, $broadcast, $deviceId, 60 * 60);
+            // Update channel info
+            $channel = $device->channels()->where('position', $resultData['channelId'])->first();
+            if ($channel) {
+                $channel->update([
+                    'live_token' => $resultData['liveToken'],
+                    'live_url_hls' => $stream['hls'],
+                    'has_stream' => true,
+                ]);
+            }
+
+            Caching::setCache(CacheKey::CACHE_LIVE_STREAM, $broadcast, $cacheKey, 60 * 60);
             LogHelper::debug("Khởi động live device {$deviceId} thành công");
 
             return ServiceReturn::success(
@@ -439,22 +490,31 @@ class VideoLiveService
      * @param string $deviceId
      * @return ServiceReturn
      */
-    public function viewLive(string $deviceId): ServiceReturn
+    public function viewLive(string $deviceId, ?int $channelNo = null): ServiceReturn
     {
         $device = $this->findCamera($deviceId);
         if (!$device) {
             return ServiceReturn::error('Thiết bị không tồn tại');
         }
 
+        $cacheKey = $deviceId . ($channelNo !== null ? "_{$channelNo}" : "");
+
         // Kiểm tra cache trước
-        $broadcast = Caching::getCache(CacheKey::CACHE_LIVE_STREAM, $deviceId);
+        $broadcast = Caching::getCache(CacheKey::CACHE_LIVE_STREAM, $cacheKey);
         if ($broadcast) {
             return ServiceReturn::success($broadcast);
         }
 
-        $channel = $device->channels()->where('status', StatusChannel::ONLINE->value)->first();
-        if (!$channel) {
-            return ServiceReturn::error('Không có kênh nào đang hoạt động');
+        if ($channelNo !== null) {
+            $channel = $device->channels()->where('position', $channelNo)->first();
+            if (!$channel) {
+                return ServiceReturn::error("Kênh số {$channelNo} không tồn tại");
+            }
+        } else {
+            $channel = $device->channels()->where('status', StatusChannel::ONLINE->value)->first();
+            if (!$channel) {
+                return ServiceReturn::error('Không có kênh nào đang hoạt động');
+            }
         }
 
         $response = $this->sendAuthRequest(self::PATH_LIVE_CHECK, [
@@ -477,7 +537,14 @@ class VideoLiveService
                     : StatusChannel::OFFLINE->value,
             ];
 
-            Caching::setCache(CacheKey::CACHE_LIVE_STREAM, $broadcast, $deviceId, 60 * 60);
+            // Update channel info
+            $channel->update([
+                'live_token' => $stream['liveToken'],
+                'live_url_hls' => $stream['hls'],
+                'has_stream' => true,
+            ]);
+
+            Caching::setCache(CacheKey::CACHE_LIVE_STREAM, $broadcast, $cacheKey, 60 * 60);
             return ServiceReturn::success($broadcast);
         }
 

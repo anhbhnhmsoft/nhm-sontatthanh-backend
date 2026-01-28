@@ -21,6 +21,8 @@ class Camera extends Model
         'bind_status',
         'enable',
         'security_code',
+        'device_model',
+        'total_channels',
     ];
 
     protected $casts = [

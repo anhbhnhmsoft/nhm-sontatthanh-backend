@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Core\Controller\BaseController;
 use App\Service\CameraService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-
+use Illuminate\Http\Request; 
 class CameraController extends BaseController
 {
     protected CameraService $cameraService;
@@ -20,16 +19,21 @@ class CameraController extends BaseController
      */
     public function startLive(Request $request): JsonResponse
     {
-        $request->validate([
-            'device_id' => 'required|string|exists:cameras,device_id',
-        ],
-        [
-            'device_id.required' => 'Vui lòng nhập device_id',
-            'device_id.exists' => 'Device_id không tồn tại',
-        ]);
+        $request->validate(
+            [
+                'device_id' => 'required|string|exists:cameras,device_id',
+                'channel_no' => 'nullable|integer',
+            ],
+            [
+                'device_id.required' => 'Vui lòng nhập device_id',
+                'device_id.exists' => 'Device_id không tồn tại',
+                'channel_no.integer' => 'Channel_no phải là số nguyên',
+            ]
+        );
 
         $result = $this->cameraService->startCameraLive(
-            $request->input('device_id')
+            $request->input('device_id'),
+            channelNo: $request->input('channel_no')
         );
 
         if ($result->isError()) {

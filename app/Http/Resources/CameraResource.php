@@ -24,6 +24,19 @@ class CameraResource extends JsonResource
             'device_id' => $this->device_id,
             'channel_id' => $this->channel_id,
             'enable' => $this->enable,
+            'channels' => $this->channels->map(function ($channel) {
+                return [
+                    'id' => (string) $channel->id,
+                    'name' => $channel->name,
+                    'status' => $channel->status,
+                    'position' => $channel->position,
+                    'is_activated' => $channel->is_activated,
+                    'has_stream' => $channel->has_stream,
+                    'live_token' => $channel->live_token,
+                    'live_url_hls' => $channel->live_url_hls,
+                    'live_url_https' => $channel->live_url_https,
+                ];
+            }),
         ];
     }
 }
