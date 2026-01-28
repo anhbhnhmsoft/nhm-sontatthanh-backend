@@ -31,6 +31,14 @@ class ProductService extends BaseService
             // Eager load relationships
             $query->with(['brand', 'line']);
 
+            if (auth('sanctum')->check()) {
+                $query->withExists(['cartItems as is_incart' => function ($q) {
+                    $q->whereHas('cart', function ($q2) {
+                        $q2->where('user_id', auth('sanctum')->id());
+                    });
+                }]);
+            }
+
             if (!empty($filters)) {
                 // Search by keyword
                 if (isset($filters['keyword'])) {
@@ -74,7 +82,7 @@ class ProductService extends BaseService
                     $query->where('quantity', '>', 0);
                 }
                 // Filter by wishlist
-                if( isset($filters['is_wishlist']) && boolval($filters['is_wishlist']) ){
+                if (isset($filters['is_wishlist']) && boolval($filters['is_wishlist'])) {
                     $query->whereHas('wishlists', function ($query) use ($filters) {
                         $query->where('user_id', auth()->user()->id);
                     });

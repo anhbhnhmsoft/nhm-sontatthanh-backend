@@ -40,6 +40,14 @@ Route::prefix('wishlist')->middleware('auth:sanctum')->group(function () {
     Route::delete('remove', [\App\Http\Controllers\Api\WishlistController::class, 'remove']);
 });
 
+Route::prefix('cart')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\CartController::class, 'index']);
+    Route::post('add', [\App\Http\Controllers\Api\CartController::class, 'add']);
+    Route::put('update', [\App\Http\Controllers\Api\CartController::class, 'update']);
+    Route::delete('remove', [\App\Http\Controllers\Api\CartController::class, 'remove']);
+    Route::delete('clear', [\App\Http\Controllers\Api\CartController::class, 'clear']);
+});
+
 Route::prefix('showroom')->group(function () {
     Route::get('list', [ShowroomController::class, 'list']);
     Route::middleware('auth:sanctum')->get('camera-library', [ShowroomController::class, 'cameraLibrary']);
@@ -52,7 +60,7 @@ Route::prefix('brand')->group(function () {
     Route::get('line', [BrandController::class, 'line']);
 });
 
-Route::middleware('auth:sanctum')->prefix('product')->group(function () {
+Route::prefix('product')->group(function () {
     Route::get('list', [ProductController::class, 'list']);
     Route::get('{id}', [ProductController::class, 'detail']);
 });

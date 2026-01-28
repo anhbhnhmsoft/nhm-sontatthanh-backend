@@ -150,7 +150,14 @@ class ShowroomService extends BaseService
     {
         try {
 
-            $cameras = $user->cameras()->where('is_active', true)->where('bind_status', true)->where('enable', true)->get();
+            $cameras = $user->cameras()
+                ->with(['channels' => function ($query) {
+                    $query->orderBy('position', 'asc');
+                }])
+                ->where('is_active', true)
+                ->where('bind_status', true)
+                ->where('enable', true)
+                ->get();
             return ServiceReturn::success(
                 data: $cameras
             );

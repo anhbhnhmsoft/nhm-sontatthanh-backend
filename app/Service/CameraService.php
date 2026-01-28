@@ -20,17 +20,17 @@ class CameraService
      * @param User|null $user
      * @return ServiceReturn
      */
-    public function startCameraLive(string $deviceId, ?User $user = null): ServiceReturn
+    public function startCameraLive(string $deviceId, ?User $user = null, ?int $channelNo = null): ServiceReturn
     {
         try {
             /** @var User $user */
-            $user = $user ?? Auth::user();  
+            $user = $user ?? Auth::user();
 
             if (!$user) {
                 return ServiceReturn::error('Người dùng chưa đăng nhập');
             }
 
-            // Kiểm tra quyền truy cập camera   
+            // Kiểm tra quyền truy cập camera
             $camera = $user->cameras()
                 ->where('cameras.device_id', $deviceId)
                 ->where('is_active', true)
@@ -49,6 +49,7 @@ class CameraService
             // Khởi động live
             $liveResult = $this->videoLiveService->startLive(
                 $camera->device_id,
+                $channelNo
             );
 
             if (!$liveResult->isSuccess()) {
@@ -57,7 +58,7 @@ class CameraService
 
             $camera->update([
                 'live_status' => true,
-            ]); 
+            ]);
 
 
             return ServiceReturn::success(data: $liveResult->getData(), message: 'Khởi động live thành công');
