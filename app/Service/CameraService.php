@@ -12,6 +12,7 @@ class CameraService
 {
     public function __construct(
         protected VideoLiveService $videoLiveService,
+        protected Camera $cameraModel,
     ) {}
 
     /**
@@ -31,8 +32,8 @@ class CameraService
             }
 
             // Kiểm tra quyền truy cập camera
-            $camera = $user->cameras()
-                ->where('cameras.device_id', $deviceId)
+            $camera = $this->cameraModel->query()
+                ->where('device_id', $deviceId)
                 ->where('is_active', true)
                 ->where('enable', true)
                 ->first();

@@ -149,8 +149,7 @@ class ShowroomService extends BaseService
     public function cameraLibrary(User $user): ServiceReturn
     {
         try {
-
-            $cameras = $user->cameras()
+            $cameras = $this->cameraModel->query()
                 ->with(['channels' => function ($query) {
                     $query->orderBy('position', 'asc');
                 }])
