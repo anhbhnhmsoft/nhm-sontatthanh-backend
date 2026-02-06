@@ -8,7 +8,9 @@ use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ShowroomController;
+use App\Service\VideoLiveService;
 use Illuminate\Support\Facades\Route;
+use App\Services\VideoService;
 
 Route::prefix('auth')->group(function () {
     Route::middleware(['throttle:5,1'])->group(function () {
@@ -90,6 +92,17 @@ Route::prefix('notification')->middleware(['auth:sanctum'])->group(function () {
     Route::get('unread-count', [NotificationController::class, 'unreadCount']);
     // Lấy device token
     Route::post('device-token', [NotificationController::class, 'deviceToken']);
+});
+
+Route::get('/camera-list', function () {
+    $service = app(VideoLiveService::class);
+    $result = $service->startLive('C368EBJPCG055F9');
+    return response()->json([
+        'status' => 'success',
+        'data' => [
+            $result
+        ],
+    ]);
 });
 
 Route::get('hotlines', [ShowroomController::class, 'hotlines']);

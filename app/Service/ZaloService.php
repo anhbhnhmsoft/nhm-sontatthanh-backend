@@ -10,7 +10,6 @@ use App\Core\Service\ServiceReturn;
 use App\Enums\ConfigKey;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Zalo\Zalo;
 use Zalo\ZaloEndPoint;
