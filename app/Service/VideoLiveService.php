@@ -394,12 +394,6 @@ class VideoLiveService
      */
     public function startLive(string $deviceId, ?int $channelNo = null): ServiceReturn
     {
-        // Cache key logic - include channelNo if present to avoid collision? 
-        // For now, let's append channelNo if provided, or default to 0 if we assume single stream main?
-        // Actually, if we want to support multiple channels, we should probably differentiate. 
-        // But user didn't ask to change viewLive, only explicitly start-live. 
-        // Let's rely on finding channel first.
-
         $cacheKey = $deviceId . ($channelNo !== null ? "_{$channelNo}" : "");
 
         // Kiểm tra cache trước

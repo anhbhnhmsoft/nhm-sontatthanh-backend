@@ -3,6 +3,7 @@
 namespace App\Filament\Clusters\Commerce\Resources\Products\Pages;
 
 use App\Filament\Clusters\Commerce\Resources\Products\ProductResource;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -15,9 +16,10 @@ class EditProduct extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make(),   
             ForceDeleteAction::make(),
             RestoreAction::make(),
+            CreateAction::make(),
         ];
     }
 }

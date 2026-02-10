@@ -110,7 +110,6 @@ class CamerasTable
                             }
 
                             $channelRes = $videoLiveService->getDeviceChannelInfo($record->device_id);
-
                             if ($channelRes->isError()) {
                                 Notification::make()
                                     ->title('Lỗi')
@@ -120,10 +119,9 @@ class CamerasTable
                                 return;
                             }
 
-                            // Try to start live for the first channel found
                             $channels = $record->channels()->orderBy('position')->get();
                             $firstChannel = $channels->first();
-                            $channelNo = $firstChannel ? $firstChannel->position : 0; // Default to 0 if no channels
+                            $channelNo = $firstChannel ? $firstChannel->position : 0;
 
                             LogHelper::debug('Kiểm tra kết nối camera', [
                                 'device_id' => $record->device_id,
@@ -160,14 +158,9 @@ class CamerasTable
                                 $res = $videoLiveService->viewLive($record->device_id, $channel->position);
                                 if ($res->isSuccess()) {
                                     $url = $res->getData()['hls'];
-                                    $proxyUrl = str_replace(
-                                        'http://cmgw-sg.easy4ipcloud.com:8888/',
-                                        'https://sontatthanh.vn/camera-proxy/',
-                                        $url
-                                    );
                                     $streams[] = [
                                         'name' => $channel->name ?? "Channel {$channel->position}",
-                                        'url' => $proxyUrl,
+                                        'url' => $url,
                                         'position' => $channel->position,
                                     ];
                                 }
