@@ -352,7 +352,7 @@
                     <p>Giải pháp công nghệ đột phá dành riêng cho đối tác và khách hàng của Sơn Tất Thành. Tra cứu sản phẩm, đặt hàng và quản lý doanh số chỉ với một chạm.</p>
                     <div class="btn-group">
                         <a href="https://apps.apple.com/us/app/s%C6%A1n-t%E1%BA%A5t-th%C3%A0nh/id6756988687" class="btn btn-white" title="Tải cho IOS (Iphone)"><img src="images/appstore.png"></a>
-                        <a href="download/application-81e2c5b6-74b3-45c5-bc2c-b24fb61e0cc3.apk" class="btn btn-white" title="Tải cho CHPlay"><img src="images/chplay.png"></a>
+                        <a href="download/sontatthanhmobile.apk" class="btn btn-white" title="Tải cho CHPlay"><img src="images/chplay.png"></a>
                     </div>
                 </div>
                 <div class="hero-image">
