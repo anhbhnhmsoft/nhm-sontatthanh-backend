@@ -84,7 +84,7 @@ class ProductService extends BaseService
                 // Filter by wishlist
                 if (isset($filters['is_wishlist']) && boolval($filters['is_wishlist'])) {
                     $query->whereHas('wishlists', function ($query) use ($filters) {
-                        $query->where('user_id', auth()->user()->id);
+                        $query->where('user_id', auth('sanctum')->id());
                     });
                 }
             }
