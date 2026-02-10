@@ -3,6 +3,7 @@
 namespace App\Filament\Clusters\Commerce\Resources\Cameras\Pages;
 
 use App\Filament\Clusters\Commerce\Resources\Cameras\CameraResource;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -18,6 +19,7 @@ class EditCamera extends EditRecord
             DeleteAction::make(),
             ForceDeleteAction::make(),
             RestoreAction::make(),
+            CreateAction::make(),
         ];
     }
 }
