@@ -1,15 +1,14 @@
 @vite(['resources/css/app.css'])
 <x-filament::section>
     <div class="p-4">
-        @if (!empty($streams))
+        @if (!empty($stream))
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @foreach ($streams as $stream)
             <div class="space-y-2">
-                <div class="font-medium text-sm text-gray-600">{{ $stream['name'] }} (Kênh {{ $stream['position'] }})</div>
+                <div class="font-medium text-sm text-gray-600">Kênh {{ $stream['streamId'] }}</div>
                 <div x-data="{
                             init() {
                                 const video = this.$refs.player;
-                                const videoSrc = '{{ $stream['url'] }}';
+                                const videoSrc = '{{ $stream['hls'] }}';
                                 if (typeof Hls !== 'undefined' && Hls.isSupported()) {
                                     const hls = new Hls();
                                     hls.loadSource(videoSrc);
@@ -22,7 +21,6 @@
                     <video x-ref="player" class="w-full rounded-xl shadow-sm border border-gray-200 aspect-video bg-black" controls autoplay playsinline muted></video>
                 </div>
             </div>
-            @endforeach
         </div>
         <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
         @else

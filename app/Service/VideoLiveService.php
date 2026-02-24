@@ -390,8 +390,6 @@ class VideoLiveService
      */
     public function startLive(string $deviceId, ?int $channelNo = null): ServiceReturn
     {
-        $cacheKey = $deviceId . ($channelNo !== null ? "_{$channelNo}" : "");
-
 
         $device = $this->findCamera($deviceId);
         if (!$device) {
@@ -428,7 +426,7 @@ class VideoLiveService
         // Khởi động thành công
         if ($code === '0') {
             $resultData = $response['result']['data'];
-            $stream = $resultData['streams'][0];
+            $stream = $resultData['streams'][1];
 
             $device->update(['is_active' => true]);
             $baseDomain = "http://cmgw-sg.easy4ipcloud.com:8888/";
@@ -476,25 +474,21 @@ class VideoLiveService
         if (!$device) {
             return ServiceReturn::error('Thiết bị không tồn tại');
         }
-
-        $cacheKey = $deviceId . ($channelNo !== null ? "_{$channelNo}" : "");
-
-
+        
         $response = $this->sendAuthRequest(self::PATH_LIVE_CHECK, [
-            'channelId' => '1',
+            'channelId' => '0',
             'deviceId' => $deviceId,
         ]);
-
         if ($this->isSuccessResponse($response)) {
             $resultData = $response['result']['data'];
-            $stream = $resultData['streams'][0];
+            $stream = $resultData['streams'][1];
             $baseDomain = "http://cmgw-sg.easy4ipcloud.com:8888/";
             $broadcast = [
                 'coverUrl'   => $baseDomain . $stream['coverUrl'],
                 'streamId'   => $stream['streamId'],
                 'hls'        => $stream['hls'],
                 'liveToken'  => $stream['liveToken'],
-                'channelId'  => 1,
+                'channelId'  => 0,
                 'liveStatus' => $stream['status'] == 'online'
                     ? StatusChannel::ONLINE->value
                     : StatusChannel::OFFLINE->value,
