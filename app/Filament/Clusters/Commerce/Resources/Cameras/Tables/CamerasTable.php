@@ -152,13 +152,12 @@ class CamerasTable
                                     ->warning()
                                     ->send();
                             }
-
                             $action->arguments([
-                                'streams' => $res->getData(),
+                                'stream' => $res->getData(),
                             ]);
                         })
                         ->modalContent(fn(array $arguments) => view('filament.pages.video-player', [
-                            'streams' => $arguments['streams'] ?? [],
+                            'stream' => $arguments['stream'] ?? [],
                         ]))
                         ->modalWidth('7xl') // Increase width for multiple streams
                         ->modalHeading(fn($record) => "Live Stream: {$record->name}")
