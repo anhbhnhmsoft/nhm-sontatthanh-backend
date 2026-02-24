@@ -10,6 +10,7 @@ use App\Core\Service\ServiceException;
 use App\Core\Service\ServiceReturn;
 use App\Enums\ConfigKey;
 use App\Models\Config;
+use Illuminate\Support\Str;
 
 class ConfigService extends BaseService
 {
@@ -87,6 +88,28 @@ class ConfigService extends BaseService
         } catch (\Throwable $th) {
             LogHelper::debug(message: $th->getMessage());
             return ServiceReturn::error(message: 'Cập nhật cấu hình thất bại: ' . $th->getMessage());
+        }
+    }
+
+    public function freshSaleCode(): ServiceReturn
+    {
+        try {
+            $config = $this->config->query()->where('config_key', ConfigKey::APP_SALE_CODE->value)->first();
+            if ($config) {
+                $code = Str::upper(Str::random(6));
+                while ($this->config->query()->where('config_value', $code)->exists()) {
+                    $this->config->query()->where('config_value', $code)->delete();
+                    $code = Str::upper(Str::random(6));
+                }
+                $config->config_value = $code;
+                $config->save();
+                Caching::deleteCache(CacheKey::CACHE_CONFIG_KEY, ConfigKey::APP_SALE_CODE->value);
+                return ServiceReturn::success(data: $config->config_value);
+            }
+            return ServiceReturn::error('Không tìm thấy cấu hình');
+        } catch (\Throwable $th) {
+            LogHelper::debug(message: $th->getMessage());
+            return ServiceReturn::error(message: $th->getMessage());
         }
     }
 }

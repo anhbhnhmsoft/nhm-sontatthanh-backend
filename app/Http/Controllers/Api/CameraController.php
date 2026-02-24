@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Core\Controller\BaseController;
 use App\Service\CameraService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request; 
 class CameraController extends BaseController
@@ -19,6 +20,10 @@ class CameraController extends BaseController
      */
     public function startLive(Request $request): JsonResponse
     {
+        $now = Carbon::now();
+        if($now->hour < 7 || $now->hour > 21){
+            return $this->sendError("Hệ thống camera chỉ hoạt động từ 7h đến 21h");
+        }
         $request->validate(
             [
                 'device_id' => 'required|string|exists:cameras,device_id',

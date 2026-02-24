@@ -119,16 +119,8 @@ class CamerasTable
                                 return;
                             }
 
-                            $channels = $record->channels()->orderBy('position')->get();
-                            $firstChannel = $channels->first();
-                            $channelNo = $firstChannel ? $firstChannel->position : 0;
 
-                            LogHelper::debug('Kiểm tra kết nối camera', [
-                                'device_id' => $record->device_id,
-                                'channel_no' => $channelNo,
-                            ]);
-
-                            $res = $videoLiveService->startLive($record->device_id, $channelNo);
+                            $res = $videoLiveService->startLive($record->device_id, 0);
 
                             if ($res->isError()) {
                                 Notification::make()
@@ -151,33 +143,18 @@ class CamerasTable
                         ->color('success')
                         ->mountUsing(function (Action $action, $record) {
                             $videoLiveService = app(VideoLiveService::class);
-                            $channels = $record->channels()->orderBy('position')->get();
-                            $streams = [];
+                            $res = $videoLiveService->viewLive($record->device_id, 0);
 
-                            foreach ($channels as $channel) {
-                                $res = $videoLiveService->viewLive($record->device_id, $channel->position);
-                                if ($res->isSuccess()) {
-                                    $url = $res->getData()['hls'];
-                                    $streams[] = [
-                                        'name' => $channel->name ?? "Channel {$channel->position}",
-                                        'url' => $url,
-                                        'position' => $channel->position,
-                                    ];
-                                }
-                            }
-
-                            if (empty($streams)) {
+                            if ($res->isError()) {
                                 Notification::make()
                                     ->title('Không tìm thấy luồng phát')
                                     ->body('Không có kênh nào đang hoạt động hoặc có tín hiệu.')
                                     ->warning()
                                     ->send();
-                                // Optional: Don't halt, let them see empty modal or halt?
-                                // $action->halt();
                             }
 
                             $action->arguments([
-                                'streams' => $streams,
+                                'streams' => $res->getData(),
                             ]);
                         })
                         ->modalContent(fn(array $arguments) => view('filament.pages.video-player', [
