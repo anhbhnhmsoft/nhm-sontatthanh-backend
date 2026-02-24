@@ -26,6 +26,7 @@ class EditProfileRequest extends FormRequest
             'old_password' => 'nullable|string|min:6',
             'new_password' => 'nullable|string|min:6',
             'email' => 'nullable|email',
+            'referral_code' => 'nullable|string',
         ];
     }
 

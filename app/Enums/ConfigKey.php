@@ -17,6 +17,7 @@ enum ConfigKey: string
     case APPLE_PRIVATE_KEY = 'APPLE_PRIVATE_KEY';
     case APPLE_REDIRECT_URI = 'APPLE_REDIRECT_URI';
     case APP_AVATAR = 'APP_AVATAR';
+    case APP_SALE_CODE = 'APP_SALE_CODE';
 
     public static function getConfigDirector(): array
     {

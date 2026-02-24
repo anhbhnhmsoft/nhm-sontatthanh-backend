@@ -10,6 +10,7 @@ use App\Http\Resources\CameraResource;
 use App\Http\Resources\ShowroomResource;
 use App\Service\ConfigService;
 use App\Service\ShowroomService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -96,6 +97,10 @@ class ShowroomController extends BaseController
      */
     public function cameraLibrary()
     {
+        $now = Carbon::now();
+        if($now->hour < 7 || $now->hour > 21){
+            return $this->sendError("Hệ thống camera chỉ hoạt động từ 7h đến 21h");
+        }
         $user = Auth::user();
         $libraryCache = Caching::getCache(CacheKey::CACHE_SALE_CAMERA, $user->id);
 

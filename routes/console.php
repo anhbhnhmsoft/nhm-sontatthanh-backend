@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:refresh-access-token')->twiceDaily(1, 13);
 Schedule::command('app:fresh-state-camera')->hourly();
+Schedule::command('app:fresh-code-verify-sale')->everyTwoHours();

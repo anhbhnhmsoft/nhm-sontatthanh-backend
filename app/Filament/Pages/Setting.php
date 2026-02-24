@@ -60,7 +60,12 @@ class Setting extends Page implements HasForms
                         ->directory('configs');
                     continue;
                 }
-
+                if ($key == ConfigKey::APP_SALE_CODE->value) {
+                    $fields[] = TextInput::make($key)
+                        ->label($label)
+                        ->disabled();
+                    continue;
+                }
                 $fields[] = TextInput::make($key)
                     ->label($label);
             }

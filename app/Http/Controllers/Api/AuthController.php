@@ -161,6 +161,7 @@ class AuthController extends BaseController
             $request->validated('new_password'),
             $request->validated('email'),
             $request->validated('phone'),
+            $request->validated('referral_code'),
         );
 
         if ($result->isError()) {
@@ -171,7 +172,7 @@ class AuthController extends BaseController
 
         return $this->sendSuccess(
             data: [
-                'user' => UserResource::make(Auth::user()),
+                'user' => UserResource::make($result->getData()['user']),
             ],
             message: $result->getMessage()
         );

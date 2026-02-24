@@ -4,16 +4,15 @@ namespace App\Service;
 
 use App\Core\Cache\CacheKey;
 use App\Core\Cache\Caching;
+use App\Core\Helper;
 use App\Core\LogHelper;
 use App\Core\Service\BaseService;
 use App\Core\Service\ServiceException;
 use App\Core\Service\ServiceReturn;
+use App\Enums\ConfigKey;
 use App\Enums\DirectFile;
-use App\Enums\UserNotificationType;
 use App\Enums\UserRole;
-use App\Http\DTO\NotificationPayload;
 use App\Http\Resources\UserResource;
-use App\Jobs\SendNotificationJob;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +31,7 @@ class AuthService extends BaseService
     public function __construct(
         protected User        $userModel,
         protected ZaloService $zaloService,
+        protected ConfigService $configService,
     ) {}
 
     /**
@@ -600,9 +600,10 @@ class AuthService extends BaseService
      * @param ?string $newPassword
      * @param ?string $email
      * @param ?string $phone
+     * @param ?string $referralCode
      * @return ServiceReturn
      */
-    public function editProfile(?string $name, ?UploadedFile $avatar, ?string $oldPassword, ?string $newPassword, ?string $email, ?string $phone): ServiceReturn
+    public function editProfile(?string $name, ?UploadedFile $avatar, ?string $oldPassword, ?string $newPassword, ?string $email, ?string $phone, ?string $referralCode): ServiceReturn
     {
         try {
             /**
@@ -627,9 +628,35 @@ class AuthService extends BaseService
             if ($phone && isset($phone)) {
                 $user->phone = $phone;
             }
+            if ($referralCode && isset($referralCode)) {
+                $sale = $this->userModel->where('referral_code', $referralCode)->first();
+                if ($sale) {
+                    $user->sale_id = $sale->id;
+                    $user->save();
+                    return ServiceReturn::success(['user' => $user], 'Cập nhật thông tin thành công');
+                }
+
+                $code = $this->configService->getConfigByKey(ConfigKey::APP_SALE_CODE);
+                if ($code->getData()['config_value'] == $referralCode) {
+                    $user->role = UserRole::SALE->value;
+                    $user->referral_code = Helper::generateReferCode('SL');
+                    $user->save();
+                    return ServiceReturn::success(['user' => $user], 'Cập nhật thông tin thành công');
+                }
+                LogHelper::error(
+                    'Mã giới thiệu không hợp lệ',
+                    null,
+                    [
+                        'referralCode' => $referralCode,
+                        'sale_code' => $code->getData()['config_value'],
+                        'user' => $user,
+                    ]
+                );
+                return ServiceReturn::error('Mã giới thiệu không hợp lệ');
+            }
             $user->save();
 
-            return ServiceReturn::success($user, 'Cập nhật thông tin thành công');
+            return ServiceReturn::success(['user' => $user], 'Cập nhật thông tin thành công');
         } catch (\Throwable $th) {
             LogHelper::error(
                 'Lỗi xảy ra ở AuthService@editProfile :',
