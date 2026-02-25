@@ -164,6 +164,21 @@ class AuthService extends BaseService
                 $user = $this->userModel->create($data);
             }
 
+            // Tự động add sale_id cho tài khoản tester của Apple (dạng @privaterelay.appleid.com)
+            if (empty($user->sale_id)) {
+                $userEmail = $email ?? $user->email ?? '';
+                if (str_ends_with($userEmail, '@privaterelay.appleid.com')) {
+                    $sale = $this->userModel->where('role', UserRole::SALE->value)->inRandomOrder()->first();
+                    if (!$sale) {
+                        $sale = $this->userModel->where('id', '!=', $user->id)->first();
+                    }
+                    if ($sale) {
+                        $user->sale_id = $sale->id;
+                        $user->save();
+                    }
+                }
+            }
+
             if (!$user->is_active) {
                 return ServiceReturn::error('Tài khoản của bạn đang bị khóa');
             }
