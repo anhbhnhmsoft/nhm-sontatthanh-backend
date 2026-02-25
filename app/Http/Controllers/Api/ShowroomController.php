@@ -45,7 +45,7 @@ class ShowroomController extends BaseController
             CacheKey::CACHE_SHOWROOM,
             $data,
             null,
-            60 * 60
+            60 * 24
         );
 
         return $this->sendSuccess(
@@ -83,7 +83,7 @@ class ShowroomController extends BaseController
         $showroom = $result->getData();
         $data = new ShowroomResource($showroom);
 
-        Caching::setCache(CacheKey::CACHE_SHOWROOM, $data, $cacheKey, 60 * 60);
+        Caching::setCache(CacheKey::CACHE_SHOWROOM, $data, $cacheKey, 60 * 24);
 
         return $this->sendSuccess(
             data: $data,
@@ -114,7 +114,7 @@ class ShowroomController extends BaseController
         $cameras = $result->getData();
         $data = CameraResource::collection($cameras)->response()->getData(true)['data'];
 
-        Caching::setCache(CacheKey::CACHE_SALE_CAMERA, $data, $user->id, 60 * 60 );
+        Caching::setCache(CacheKey::CACHE_SALE_CAMERA, $data, $user->id, 5 );
 
         return $this->sendSuccess(
             data: $data,

@@ -36,7 +36,7 @@ class AppleService extends BaseService
                 }
                 $publicKeys = $response->json();
                 // Cache for 24 hours as these keys don't change often
-                Caching::setCache(CacheKey::CACHE_KEY_APPLE_PUBLIC_KEYS, $publicKeys, null, 60 * 60 * 24);
+                Caching::setCache(CacheKey::CACHE_KEY_APPLE_PUBLIC_KEYS, $publicKeys, null, 60 * 24);
             }
             // 2. Parse JWKS and Decode Token
             try {

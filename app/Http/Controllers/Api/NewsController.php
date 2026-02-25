@@ -91,6 +91,8 @@ class NewsController extends BaseController
         Caching::setCache(
             key: CacheKey::CACHE_CATEGORY_NEWS,
             value: $categories,
+            uniqueKey: null,
+            expire: 60 * 24
         );
         $data = CategoryNewsResource::collection($categories)->response()->getData(true);
 

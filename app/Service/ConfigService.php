@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 class ConfigService extends BaseService
 {
 
-    const TIME_CACHE = 60 * 60 * 24; // 1 ngày  
+    const TIME_CACHE = 60 * 24; // 1 ngày  
     public function __construct(protected Config $config) {}
 
     public function getAllConfig(): ServiceReturn
