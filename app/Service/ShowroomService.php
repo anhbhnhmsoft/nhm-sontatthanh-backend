@@ -6,10 +6,8 @@ use App\Core\Controller\FilterDTO;
 use App\Core\LogHelper;
 use App\Core\Service\BaseService;
 use App\Core\Service\ServiceReturn;
-use App\Enums\UserRole;
 use App\Models\Camera;
 use App\Models\Showroom;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -17,7 +15,8 @@ class ShowroomService extends BaseService
 {
     public function __construct(
         protected Showroom $showroomModel,
-        protected Camera $cameraModel
+        protected Camera $cameraModel,
+        protected VideoLiveService $videoLiveService
     ) {}
 
     /**
@@ -143,10 +142,9 @@ class ShowroomService extends BaseService
     }
 
     /**
-     * @param User $user
      * @return ServiceReturn
      */
-    public function cameraLibrary(User $user): ServiceReturn
+    public function cameraLibrary(): ServiceReturn
     {
         try {
             $cameras = $this->cameraModel->query()
@@ -157,6 +155,7 @@ class ShowroomService extends BaseService
                 ->where('bind_status', true)
                 ->where('enable', true)
                 ->get();
+
             return ServiceReturn::success(
                 data: $cameras
             );
@@ -169,7 +168,7 @@ class ShowroomService extends BaseService
                 data: []
             );
         }
-    }
+    }   
 
     /**
      * @return ServiceReturn

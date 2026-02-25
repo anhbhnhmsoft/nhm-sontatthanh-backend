@@ -10,6 +10,7 @@ use App\Http\Resources\CameraResource;
 use App\Http\Resources\ShowroomResource;
 use App\Service\ConfigService;
 use App\Service\ShowroomService;
+use App\Service\VideoLiveService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,7 @@ class ShowroomController extends BaseController
     public function __construct(
         protected ShowroomService $showroomService,
         protected ConfigService  $configService,
+        protected VideoLiveService $videoLiveService
     ) {}
 
     /**
@@ -98,23 +100,40 @@ class ShowroomController extends BaseController
     public function cameraLibrary()
     {
         $now = Carbon::now();
-        if($now->hour < 7 || $now->hour > 21){
+        if ($now->hour < 7 || $now->hour > 21) {
             return $this->sendError("Hệ thống camera chỉ hoạt động từ 7h đến 21h");
         }
         $user = Auth::user();
-        $libraryCache = Caching::getCache(CacheKey::CACHE_SALE_CAMERA, $user->id);
-
-        if ($libraryCache) {
-            return $this->sendSuccess(
-                data: $libraryCache,
-            );
-        }
-
-        $result = $this->showroomService->cameraLibrary($user);
+        $result = $this->showroomService->cameraLibrary();
         $cameras = $result->getData();
-        $data = CameraResource::collection($cameras)->response()->getData(true)['data'];
 
-        Caching::setCache(CacheKey::CACHE_SALE_CAMERA, $data, $user->id, 5 );
+        $data = collect($cameras)->map(function ($camera) {
+            $realChannelId = '';
+            if ($camera->channels && count($camera->channels) > 0) {
+                $realChannelId = (string) $camera->channels[0]->id;
+            }
+
+            $cameraArray = (new CameraResource($camera))->resolve();
+            $cameraArray['channels'] = [];
+
+            $liveResult = $this->videoLiveService->viewLive($camera->device_id);
+            if ($liveResult->isSuccess()) {
+                $liveData = $liveResult->getData();
+                $cameraArray['channels'][0] = [
+                    'id' => $realChannelId,
+                    'name' => 'Channel ' . ($liveData['channelId'] ?? 1),
+                    'status' => $liveData['liveStatus'] ?? 1,
+                    'position' => $liveData['channelId'] ?? 1,
+                    'is_activated' => 1,
+                    'has_stream' => 1,
+                    'live_token' => $liveData['liveToken'] ?? '',
+                    'live_url_hls' => $liveData['hls'] ?? '',
+                    'live_url_https' => '',
+                ];
+            }
+            return $cameraArray;
+        })->toArray();
+
 
         return $this->sendSuccess(
             data: $data,
@@ -124,14 +143,14 @@ class ShowroomController extends BaseController
     /**
      * @return JsonResponse ;
      */
-    public function hotlines() : JsonResponse
+    public function hotlines(): JsonResponse
     {
         $result = $this->showroomService->getHotlines();
-        if( $result->isError() ){
+        if ($result->isError()) {
             return $this->sendError($result->getMessage());
         }
         $data = $result->getData();
-        return $this->sendSuccess(data: ShowroomResource::collection($data)->response()->getData(true)['data'] );
+        return $this->sendSuccess(data: ShowroomResource::collection($data)->response()->getData(true)['data']);
     }
 
     /**
@@ -139,33 +158,33 @@ class ShowroomController extends BaseController
      * @param string $slug
      * @return JsonResponse
      * */
-    public function config(string $slug) : JsonResponse
+    public function config(string $slug): JsonResponse
     {
         $slug = strtoupper($slug);
         $slug = ConfigKey::tryFrom($slug);
         $result = $this->configService->getConfigByKey($slug);
 
-        if( $result->isError() ){
+        if ($result->isError()) {
             return $this->sendError($result->getMessage());
         }
         $data = $result->getData();
         return $this->sendSuccess(data: $data);
     }
 
-    public function configDirector() : JsonResponse
+    public function configDirector(): JsonResponse
     {
         $list = ConfigKey::getConfigDirector();
         $data = [];
-        foreach($list as $slug){
+        foreach ($list as $slug) {
             $result = $this->configService->getConfigByKey($slug);
-            if( $result->isError() ){
+            if ($result->isError()) {
                 return $this->sendError($result->getMessage());
             }
             $data[$slug->value] = $result->getData();
         }
         $res = [];
-        foreach ($data as $key => $value){
-            if($key === ConfigKey::APP_AVATAR->value){
+        foreach ($data as $key => $value) {
+            if ($key === ConfigKey::APP_AVATAR->value) {
                 $res[$key] = Storage::disk('public')->url($value['config_value']);
                 continue;
             }
