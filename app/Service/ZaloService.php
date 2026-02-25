@@ -81,11 +81,11 @@ class ZaloService extends BaseService
             $codeChallenge = PKCEUtil::genCodeChallenge($codeVerifier);
 
             // Store code_verifier in cache for later use in callback
-            Caching::setCache(CacheKey::CACHE_ZALO_AUTH_CODE_VERIFIER, $codeVerifier, $ip.$token, 60);
+            Caching::setCache(CacheKey::CACHE_ZALO_AUTH_CODE_VERIFIER, $codeVerifier, $ip.$token, 1);
 
             // Generate random state for CSRF protection
             $state = Str::random(40);
-            Caching::setCache(CacheKey::CACHE_ZALO_AUTH_STATE, $state, $ip.$token, 60);
+            Caching::setCache(CacheKey::CACHE_ZALO_AUTH_STATE, $state, $ip.$token, 1);
 
             // Get callback URL from route
             $callbackUrl = route('zalo.callback', ['token' => $token]);

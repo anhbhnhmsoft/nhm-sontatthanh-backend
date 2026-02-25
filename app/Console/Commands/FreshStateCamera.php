@@ -47,7 +47,7 @@ class FreshStateCamera extends Command
                 }
 
                 // Sync channel info, which updates status/online state
-                $result = $videoLiveService->getDeviceChannelInfo($camera->device_id);
+                $result = $videoLiveService->viewLive($camera->device_id);
 
                 if ($result->isError()) {
                     Log::error("Failed to refresh camera {$camera->device_id}: " . $result->getMessage());

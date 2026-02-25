@@ -22,11 +22,11 @@ use Illuminate\Support\Str;
 
 class AuthService extends BaseService
 {
-    protected int $otpTtl = 60;     // OTP tồn tại 1 phút
-    protected int $blockTime = 60 * 60;   // Khóa 60 phút (tránh gửi OTP quá nhiều)
+    protected int $otpTtl = 1;     // OTP tồn tại 1 phút
+    protected int $blockTime = 60;   // Khóa 60 phút (tránh gửi OTP quá nhiều)
     protected int $maxAttempts = 5;  // Tối đa 5 lần thử sai
     protected int $maxResendOtp = 3;  // Tối đa 3 lần gửi OTP
-    protected int $registerTimeout = 60 * 60;  // Thời gian chờ sau khi đăng ký
+    protected int $registerTimeout = 60;  // Thời gian chờ sau khi đăng ký
 
     public function __construct(
         protected User        $userModel,
@@ -85,7 +85,7 @@ class AuthService extends BaseService
                     'user' => UserResource::make($user),
                 ],
                 uniqueKey: $ip . $token,
-                expire: 60 * 5,
+                expire: 5,
             );
             return ServiceReturn::success([
                 'user' => UserResource::make($user),
@@ -197,7 +197,7 @@ class AuthService extends BaseService
                     'user' => $user,
                 ],
                 uniqueKey: $ip . '_' . $hashedTokenKey,
-                expire: 60 * 5,
+                expire: 5,
             );
 
             // Return the Sanctum token (tokenAuth), not the Identity Token
@@ -899,7 +899,7 @@ class AuthService extends BaseService
                 key: CacheKey::CACHE_KEY_FORGOT_PASSWORD_TOKEN,
                 value: $resetToken,
                 uniqueKey: $phone,
-                expire: 10 * 60 // 10 phút
+                expire: 10 // 10 phút
             );
 
             // Xóa cache OTP

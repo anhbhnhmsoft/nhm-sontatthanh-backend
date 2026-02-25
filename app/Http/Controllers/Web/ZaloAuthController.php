@@ -165,7 +165,7 @@ class ZaloAuthController extends BaseController
             key: CacheKey::CACHE_ZALO_AUTH_TOKEN_VERIFY,
             value: ['token' => $token, 'deeplink' => $deeplink],
             uniqueKey: $ip . $token,
-            expire: 60 * 5,
+            expire: 5,
         );
 
         return $this->sendSuccess(

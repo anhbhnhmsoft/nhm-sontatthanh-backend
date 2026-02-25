@@ -22,7 +22,7 @@ class VideoLiveService
     
     const CHANNEL_ID = 1;
 
-    const TIME_CACHE_TOKEN = 60 * 60 * 24; // 1 ngày
+    const TIME_CACHE_TOKEN = 60 * 24; // 1 ngày
     const HOST = 'https://openapi-sg.easy4ip.com';
 
     // API Endpoints

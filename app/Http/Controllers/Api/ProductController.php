@@ -68,7 +68,7 @@ class ProductController extends BaseController
         $data = new ProductResource($product);
 
         // Cache product detail for 1 hour
-        Caching::setCache(CacheKey::CACHE_PRODUCT, $data, $cacheKey, 60 * 60);
+        Caching::setCache(CacheKey::CACHE_PRODUCT, $data, $cacheKey, 60 * 24);
 
         return $this->sendSuccess(
             data: $data,
