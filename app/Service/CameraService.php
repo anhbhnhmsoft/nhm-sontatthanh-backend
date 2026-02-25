@@ -49,8 +49,7 @@ class CameraService
 
             // Khởi động live
             $liveResult = $this->videoLiveService->startLive(
-                $camera->device_id,
-                $channelNo
+                $camera->device_id
             );
 
             if (!$liveResult->isSuccess()) {

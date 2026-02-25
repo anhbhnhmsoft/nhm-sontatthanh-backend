@@ -2,9 +2,6 @@
 
 namespace App\Filament\Clusters\Commerce\Resources\Cameras\Tables;
 
-use App\Core\Cache\CacheKey;
-use App\Core\Cache\Caching;
-use App\Core\LogHelper;
 use App\Models\Camera;
 use App\Service\VideoLiveService;
 use Filament\Actions\Action;
@@ -120,7 +117,7 @@ class CamerasTable
                             }
 
 
-                            $res = $videoLiveService->startLive($record->device_id, 0);
+                            $res = $videoLiveService->startLive($record->device_id);
 
                             if ($res->isError()) {
                                 Notification::make()
@@ -143,7 +140,7 @@ class CamerasTable
                         ->color('success')
                         ->mountUsing(function (Action $action, $record) {
                             $videoLiveService = app(VideoLiveService::class);
-                            $res = $videoLiveService->viewLive($record->device_id, 0);
+                            $res = $videoLiveService->viewLive($record->device_id);
 
                             if ($res->isError()) {
                                 Notification::make()
