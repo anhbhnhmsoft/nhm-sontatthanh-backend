@@ -164,10 +164,13 @@ class AuthService extends BaseService
                 $user = $this->userModel->create($data);
             }
 
-            // Tự động add sale_id cho tài khoản tester của Apple (dạng @privaterelay.appleid.com)
+            // Tự động add sale_id cho tài khoản tester của Apple
+            // Nhận dạng: @privaterelay.appleid.com hoặc dạng ar_user*@icloud.com
             if (empty($user->sale_id)) {
                 $userEmail = $email ?? $user->email ?? '';
-                if (str_ends_with($userEmail, '@privaterelay.appleid.com')) {
+                $isAppleRelay = str_ends_with($userEmail, '@privaterelay.appleid.com');
+                $isArUserIcloud = str_contains($userEmail, 'ar_user') && str_ends_with($userEmail, '@icloud.com');
+                if ($isAppleRelay || $isArUserIcloud) {
                     $sale = $this->userModel->where('role', UserRole::SALE->value)->inRandomOrder()->first();
                     if (!$sale) {
                         $sale = $this->userModel->where('id', '!=', $user->id)->first();
