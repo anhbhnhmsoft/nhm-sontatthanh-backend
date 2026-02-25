@@ -19,6 +19,8 @@ class VideoLiveService
         protected Camera $cameraModel,
         protected ConfigService $configService,
     ) {}
+    
+    const CHANNEL_ID = 1;
 
     const TIME_CACHE_TOKEN = 60 * 60 * 24; // 1 ngày
     const HOST = 'https://openapi-sg.easy4ip.com';
@@ -388,7 +390,7 @@ class VideoLiveService
      * @param string $deviceId
      * @return ServiceReturn
      */
-    public function startLive(string $deviceId, ?int $channelNo = null): ServiceReturn
+    public function startLive(string $deviceId): ServiceReturn
     {
 
         $device = $this->findCamera($deviceId);
@@ -396,21 +398,10 @@ class VideoLiveService
             return ServiceReturn::error('Thiết bị không tồn tại');
         }
 
-        if ($channelNo !== null) {
-            $channel = $device->channels()->where('position', $channelNo)->first();
-            if (!$channel) {
-                return ServiceReturn::error("Kênh số {$channelNo} không tồn tại");
-            }
-        } else {
-            $channel = $device->channels()->where('status', StatusChannel::ONLINE->value)->first();
-            if (!$channel) {
-                return ServiceReturn::error('Không có kênh nào đang hoạt động');
-            }
-        }
 
         $response = $this->sendAuthRequest(self::PATH_START_LIVE, [
             'streamId' => 1,
-            'channelId' => $channel->position,
+            'channelId' => self::CHANNEL_ID,
             'deviceId' => $deviceId,
         ]);
 
@@ -420,10 +411,8 @@ class VideoLiveService
         // Live stream đã được kích hoạt trước đó
         if ($code == 'LV1001') {
             $device->update(['is_active' => true]);
-            return $this->viewLive($deviceId, $channelNo);
-        }
-
-        // Khởi động thành công
+            return $this->viewLive($deviceId);
+        }        // Khởi động thành công
         if ($code === '0') {
             $resultData = $response['result']['data'];
             $stream = $resultData['streams'][1];
@@ -468,7 +457,7 @@ class VideoLiveService
      * @param string $deviceId
      * @return ServiceReturn
      */
-    public function viewLive(string $deviceId, ?int $channelNo = null): ServiceReturn
+    public function viewLive(string $deviceId): ServiceReturn
     {
         $device = $this->findCamera($deviceId);
         if (!$device) {
@@ -476,19 +465,19 @@ class VideoLiveService
         }
         
         $response = $this->sendAuthRequest(self::PATH_LIVE_CHECK, [
-            'channelId' => '0',
+            'channelId' => '1',
             'deviceId' => $deviceId,
         ]);
         if ($this->isSuccessResponse($response)) {
             $resultData = $response['result']['data'];
-            $stream = $resultData['streams'][1];
+            $stream = $resultData['streams'][0];
             $baseDomain = "http://cmgw-sg.easy4ipcloud.com:8888/";
             $broadcast = [
                 'coverUrl'   => $baseDomain . $stream['coverUrl'],
                 'streamId'   => $stream['streamId'],
                 'hls'        => $stream['hls'],
                 'liveToken'  => $stream['liveToken'],
-                'channelId'  => 0,
+                'channelId'  => self::CHANNEL_ID,
                 'liveStatus' => $stream['status'] == 'online'
                     ? StatusChannel::ONLINE->value
                     : StatusChannel::OFFLINE->value,
