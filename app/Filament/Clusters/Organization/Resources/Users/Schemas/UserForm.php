@@ -9,7 +9,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -66,16 +65,15 @@ class UserForm
                                         name: 'collaborators',
                                         titleAttribute: 'name',
                                         modifyQueryUsing: fn(Builder $query, $livewire) => $query
-                                            ->where('role', UserRole::CTV->value)
+                                            ->whereIn('role', [UserRole::CTV->value, UserRole::SALE->value])
 
                                             ->where(function (Builder $q) use ($livewire) {
                                                 $q->whereNull('sale_id')
-                                                    ->orWhere('sale_id', $livewire->record->id);
+                                                    ->orWhere('sale_id', $livewire->record->id)
+                                                    ->where('role', UserRole::CTV->value);
                                             })
-
-                                            ->whereNot('id', $livewire->record->id)
+                                            ->whereNot('id', $livewire->record->id),
                                     )
-                                    ->hidden(fn($livewire) => $livewire->record?->role !== UserRole::SALE->value)
                                     ->searchable()
                                     ->preload()
                                     ->columnSpanFull(),
@@ -133,16 +131,6 @@ class UserForm
 
 
                             ]),
-                        Select::make('cameras')
-                            ->label('Danh sách camera')
-                            ->multiple()
-                            ->searchable()
-                            ->relationship(
-                                name: 'cameras',
-                                titleAttribute: 'name',
-                            )
-                            ->hidden(fn($livewire) => $livewire->record?->role !== UserRole::SALE->value || $livewire instanceof CreateRecord)
-                            ->columnSpanFull(),
                     ])->columnSpanFull(),
             ]);
     }

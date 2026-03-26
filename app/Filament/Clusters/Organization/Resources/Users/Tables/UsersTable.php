@@ -61,9 +61,6 @@ class UsersTable
             ->defaultSort('created_at', 'desc')
             ->recordActions([
                 ActionGroup::make([
-                    ViewAction::make()
-                        ->label('Xem')
-                        ->icon('heroicon-o-eye'),
 
                     EditAction::make()
                         ->label('Sửa')
