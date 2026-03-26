@@ -69,8 +69,7 @@ class UserForm
 
                                             ->where(function (Builder $q) use ($livewire) {
                                                 $q->whereNull('sale_id')
-                                                    ->orWhere('sale_id', $livewire->record->id)
-                                                    ->where('role', UserRole::CTV->value);
+                                                    ->orWhere('sale_id', $livewire->record->id);
                                             })
                                             ->whereNot('id', $livewire->record->id),
                                     )
